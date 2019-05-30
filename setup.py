@@ -12,7 +12,6 @@ setup(name='agents_option',
       license='MIT',
       packages=packages,
       install_requires=[
-        'python-dateutil', 'docopt==0.6.2', 'matplotlib==3.0.2', 'numpy==1.15.4',
-        'pandas==0.23.4', 'scipy==1.1.0', 'tensorflow ~> 1.12.1', 'tflearn==0.3.2', 'sphinx', 'gym'
+        'python-dateutil', 'docopt==0.6.2', 'numpy==1.15.4', 'scipy==1.1.0', 'sphinx', 'gym'
       ],
       zip_safe=False)
