@@ -6,15 +6,15 @@ penalty_end_option
 penalty_option_action
 """
 from abc import ABCMeta, abstractmethod
+from agents.policies.option.option_policy import PolicyAbstractOption
 
 
-class OptionAbstract(object):
+class OptionAbstract(metaclass=ABCMeta):
     """
     Abstract option class that barely only needs update, reset and act functions.
     """
-    __metaclass__ = ABCMeta
 
-    def __init__(self, action_space, parameters):
+    def __init__(self, action_space, parameters, index):
         """
         initial_state: where the option starts;
         terminal_state: where the option has to go;
@@ -26,6 +26,7 @@ class OptionAbstract(object):
         self.initial_state = None
         self.terminal_state = None
         self.activated = False  # safeguard that indicated if this option has been activated correctly
+        self.index = index
 
     def __repr__(self):
         return "".join(["Option(", str(self.initial_state), ",", str(self.terminal_state), ")"])
@@ -107,13 +108,12 @@ class OptionQLearning(OptionAbstract):
     Another Abstract class where its policy is updated with Q learning algorithm.
     The policy is stored and computed through variable *policy* which inherits from PolicyAbstract class
     """
-    __metaclass__ = ABCMeta
 
-    def __init__(self, action_space, parameters):
+    def __init__(self, action_space, parameters, index):
         """
         attribute self.policy represents the q function
         """
-        super().__init__(action_space, parameters)
+        super().__init__(action_space, parameters, index)
         self.policy = self.get_policy()
 
     def update_option(self, o_r_d_i, action, train_episode=None):
@@ -145,7 +145,7 @@ class OptionQLearning(OptionAbstract):
         :return: an action at the lower level
         """
         assert self.activated
-        return self.policy.find_best_action()
+        return self.policy.find_best_action(train_episode)
 
     def reset(self, initial_state, current_state, terminal_state):
         """
@@ -189,7 +189,7 @@ class OptionQLearning(OptionAbstract):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_policy(self):
+    def get_policy(self) -> PolicyAbstractOption:
         """
         Defines the class policy that this option will use
         :return:

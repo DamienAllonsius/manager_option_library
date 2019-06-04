@@ -29,8 +29,9 @@ class QGraph(PolicyAbstractAgent):
         s = ""
         for idx, elements in zip(range(self.len_state_list), self.state_graph):
             s += str(idx) + ": "
-            for k in range(len(elements)):
-                s += str(elements[k]) + ", "
+            for e in elements:
+                s += str(e) + ", "
+
             s += "\n"
 
         return s
@@ -56,7 +57,7 @@ class QGraph(PolicyAbstractAgent):
             self.state_graph.append([0])
             self.current_state_index = 0
 
-            self.len_state_list += 1
+            self.len_state_list = 1
             self.max_states = 1
 
         else:
@@ -90,24 +91,26 @@ class QGraph(PolicyAbstractAgent):
 
     def find_best_action(self, train_episode=None):
         """
-        :param train_episode: if is not None -> training mode, potentially random action
+        :param train_episode: if not None -> training mode, potentially activate the explore option
         :return: best_option_index, terminal_state
         - in test mode : the best_option_index and the corresponding terminal state
-        - in training mode : the best value possible OR a random action in training mode.
+        - in training mode : the best value possible OR (None,None) -> signal to activate the explore_option.
         """
         if (train_episode is not None) and (np.random.rand() < self.parameters["probability_random_action_agent"]):
             return None, None
 
         else:
-            index = self.state_graph[self.current_state_index][np.argmax(self.values[self.current_state_index])]
-            return index, self.states[index]
+            option_index = np.argmax(self.values[self.current_state_index])
+            state_index = self.state_graph[self.current_state_index][option_index]
+            # todo If all actions have the same value ?
+            return option_index, self.states[state_index]
 
-    def update_policy(self, new_state, reward, action):
+    def update(self, new_state, reward, action):
         """
         updates self.values
         Performs the Q learning update :
         Q_{t+1}(current_position, action) = (1- learning_rate) * Q_t(current_position, action)
-                                         += learning_rate * [reward + max_{actions} Q_(new_position, action)]
+                                         += learning_rate * [reward + max_{actions} Q_t(new_position, action)]
         :param new_state: the new observation
         :param reward: the reward gotten
         :param action: the last action chosen
@@ -187,7 +190,7 @@ class QGraph(PolicyAbstractAgent):
 #
 #         return best_option_index, self.tree.get_current_node().children[best_option_index].data
 #
-#     def update_policy(self, action, reward, new_state):
+#     def update(self, action, reward, new_state):
 #         """
 #         Performs the Q learning update :
 #         Q_{t+1}(current_position, action) = (1- learning_rate) * Q_t(current_position, action)

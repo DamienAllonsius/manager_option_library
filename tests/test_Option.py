@@ -15,7 +15,7 @@ class OptionTest(unittest.TestCase):
         self.o_r_d_i2 = [{"agent": "terminal state", "option": "state option 2"}, 2, "False", "no-info"]
         self.o_r_d_i3 = [{"agent": "state 3", "option": "state option 3"}, 17, "true", "no-info"]
 
-        self.option1 = OptionQArray(action_space=range(2), parameters=self.parameters)
+        self.option1 = OptionQArray(action_space=range(2), parameters=self.parameters, index=0)
         self.option1.reset("state 0", "state option 0", "terminal state")
 
         self.option1.policy._update_states("state option 1")

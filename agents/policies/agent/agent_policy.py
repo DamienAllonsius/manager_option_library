@@ -4,11 +4,10 @@ Policies that can be applied only on agents
 from abc import ABCMeta, abstractmethod
 
 
-class PolicyAbstractAgent(object):
+class PolicyAbstractAgent(metaclass=ABCMeta):
     """
     Given a state, a policy returns an action
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def __str__(self):
@@ -37,7 +36,7 @@ class PolicyAbstractAgent(object):
         raise NotImplementedError()
 
     @abstractmethod
-    def update_policy(self, *args, **kwargs):
+    def update(self, *args, **kwargs):
         """
         updates the value of a state specified in the arguments
         :param args:
@@ -58,7 +57,7 @@ class PolicyAbstractAgent(object):
     def get_current_state(self):
         """
         the current state is *not* stored in the Agent class to avoid to
-        double track this variable
+        track twice this variable
         :return: the current state
         """
         raise NotImplementedError()

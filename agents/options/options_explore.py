@@ -1,10 +1,8 @@
 import numpy as np
+from abc import ABCMeta, abstractmethod
 
 
-class OptionRandomExplore(object):
-    """
-    This is a special option to explore
-    """
+class OptionExploreAbstract(metaclass=ABCMeta):
 
     def __init__(self, action_space):
         self.initial_state = None
@@ -15,12 +13,6 @@ class OptionRandomExplore(object):
 
     def __str__(self):
         return "explore option from " + str(self.initial_state)
-
-    def act(self):
-        """
-        :return: a random action from the action space
-        """
-        return np.random.choice(self.action_space)
 
     def reset(self, initial_state):
         """
@@ -38,9 +30,29 @@ class OptionRandomExplore(object):
         """
         return new_state != self.initial_state
 
+    @abstractmethod
+    def update_option(self, *args):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def act(self):
+        raise NotImplementedError()
+
+
+class OptionRandomExplore(OptionExploreAbstract):
+    """
+    This is a special option to explore
+    """
+
     def update_option(self, *args):
         """
         Nothing to update here
         :return:
         """
         pass
+
+    def act(self):
+        """
+        :return: a random action from the action space
+        """
+        return np.random.choice(self.action_space)

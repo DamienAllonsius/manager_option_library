@@ -268,12 +268,28 @@ class QGraphTest(unittest.TestCase):
 
         action = set()
         for k in range(1000):
-            action.add(self.q.find_best_action(0))
+            action.add(self.q.find_best_action(train_episode=1))
 
-        expected_returned = set(map(lambda x: (x, "state " + str(x)), self.q.state_graph[self.q.current_state_index]))
+        expected_returned = set()
         expected_returned.add((None, None))
+        expected_returned.add((1, "state 1"))
 
         self.assertEqual(action, expected_returned)
+
+        self.q.parameters["probability_random_action_agent"] = 0
+        idmax = np.argmax(self.q.values[self.q.current_state_index])
+        self.assertEqual((idmax, self.q.states[self.q.state_graph[self.q.current_state_index][idmax]]),
+                         self.q.find_best_action())
+
+        self.q2.parameters["probability_random_action_agent"] = 0
+        idmax = np.argmax(self.q2.values[self.q2.current_state_index])
+        self.assertEqual((idmax, self.q2.states[self.q2.state_graph[self.q2.current_state_index][idmax]]),
+                         self.q2.find_best_action())
+
+        self.q3.parameters["probability_random_action_agent"] = 0
+        idmax = np.argmax(self.q3.values[self.q3.current_state_index])
+        self.assertEqual((idmax, self.q3.states[self.q3.state_graph[self.q3.current_state_index][idmax]]),
+                         self.q3.find_best_action())
 
     def test_update_policy(self):
 
@@ -287,7 +303,7 @@ class QGraphTest(unittest.TestCase):
         best_value = 0
         self.q.values = list(map(lambda x: x*0, self.q.values))
 
-        self.q.update_policy(new_state1, reward, action)
+        self.q.update(new_state1, reward, action)
         self.assertEqual(self.q.values[0][other_action], 0)
         self.assertEqual(self.q.values[0][action], self.q.parameters["learning_rate"] * (reward + best_value))
         self.assertEqual(self.q.current_state_index, new_state1_index)
@@ -307,7 +323,7 @@ class QGraphTest(unittest.TestCase):
         best_value = max(val_new_state2)
         reward = 10
 
-        self.q.update_policy(new_state2, reward, action)
+        self.q.update(new_state2, reward, action)
         self.assertEqual(self.q.values[new_state1_index][other_action], val_new_state1[other_action])
         self.assertEqual(self.q.current_state_index, new_state2_index)
 

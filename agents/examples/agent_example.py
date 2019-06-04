@@ -1,7 +1,9 @@
 from agents.agent.agent import AbstractAgent, AbstractAgentOption
 from agents.examples.options_examples import OptionQArray
 from agents.examples.policy_examples_agent import QGraph
+from agents.options.options import OptionAbstract
 from agents.utils.utils import ShowRender
+from agents.options.options_explore import OptionRandomExplore
 
 
 class AgentOptionMontezuma(AbstractAgentOption):
@@ -10,37 +12,35 @@ class AgentOptionMontezuma(AbstractAgentOption):
         super().__init__(action_space, parameters)
         self.show_render = None
 
-    def get_option_states(self, terminal_state):
+    def get_option_states(self, o_r_d_i, terminal_state):
         """
         :param terminal_state:
-        :return: the initial and terminal states
+        :param o_r_d_i:
+        :return: the initial, current and terminal states
         """
-        return self.policy.get_current_state(), terminal_state
+        return o_r_d_i[0]["agent"], o_r_d_i[0]["option"], terminal_state
 
-    def compute_total_score(self, o_r_d_i, option_index, train_episode):
+    def compute_total_score(self, o_r_d_i, current_option, train_episode):
         return o_r_d_i[1]
 
-    def compute_total_reward(self, o_r_d_i, option_index, train_episode):
+    def compute_total_reward(self, o_r_d_i, current_option, train_episode):
         """
         todo get a better parametrization
         KISS for the moment
         :param o_r_d_i:
-        :param option_index:
+        :param current_option:
         :param train_episode:
         :return:
         """
-        return o_r_d_i
-
-    def append_new_option(self):
-        self.option_list.append(OptionQArray(self.action_space, self.parameters))
+        return o_r_d_i[1]
 
     def get_policy(self):
         return QGraph(self.parameters)
 
-    def check_end_agent(self, o_r_d_i, option_index, train_episode):
+    def check_end_agent(self, o_r_d_i, current_option, train_episode):
         """
         :param o_r_d_i:
-        :param option_index:
+        :param current_option:
         :param train_episode:
         :return: True iff the character lost all his lives.
         """
@@ -54,6 +54,16 @@ class AgentOptionMontezuma(AbstractAgentOption):
 
     def get_current_state(self):
         return self.policy.get_current_state()
+
+    def get_explore_option(self):
+        """
+        can be overwritten if needed
+        :return:
+        """
+        return OptionRandomExplore(self.action_space)
+
+    def get_option(self) -> OptionAbstract:
+        return OptionQArray(self.action_space, self.parameters, len(self))
 
 
 class AgentQLearning(AbstractAgent):

@@ -5,15 +5,13 @@ parameters:
 probability_random_action_agent
 learning_rate
 """
-import numpy as np
 from abc import ABCMeta, abstractmethod
 
 
-class PolicyAbstractOption(object):
+class PolicyAbstractOption(metaclass=ABCMeta):
     """
     Given a state, a policy returns an action
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def __str__(self):

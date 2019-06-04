@@ -6,6 +6,7 @@ if __name__ == "__main__":
     from tests.test_Option import *
     from tests.test_Tree import *
     from tests.test_Node import *
+    from tests.test_Agent import *
     import unittest
 
     del sys.argv[1:]
