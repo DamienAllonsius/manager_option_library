@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 packages_ = find_packages()
 packages = [p for p in packages_ if not(p == 'tests')]
 
-setup(name='agents_option',
+setup(name='ao',
       version='0.T',
       description='A package to create agent following a Hierarchical Reinforcement Learning strategy',
       url='git@github.com:DamienAllonsius/agent_option_library.git',

@@ -9,7 +9,7 @@ white = '\033[0m'
 tab = '   '
 
 
-def sample_cdf(cum_probs):  # cumulative dictribution function
+def sample_cdf(cum_probs):  # cumulative distribution function
     rand = np.random.rand()
     return sum(cum_probs < rand)
 
@@ -27,8 +27,9 @@ class SaveResults(object):
         self.dir_path = self.get_dir_path()
         self.file_results_name = None
 
-    def get_dir_path(self):
-        dir_name = "results/" + self.parameters["name"]
+    @staticmethod
+    def get_dir_path():
+        dir_name = "results/"
         if not os.path.exists(dir_name):
             os.mkdir(dir_name)
 
