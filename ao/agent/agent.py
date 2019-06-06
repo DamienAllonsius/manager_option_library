@@ -5,12 +5,12 @@ This library can be connected to a gym environment or any kind of environment as
 """
 import numpy as np
 
-from agents.utils.utils import SaveResults
+from ao.utils.utils import SaveResults
 from abc import ABCMeta, abstractmethod
 from tqdm import tqdm
-from agents.policies.agent.agent_policy import PolicyAbstractAgent
-from agents.options.options import OptionAbstract
-from agents.options.options_explore import OptionExploreAbstract
+from ao.policies.agent.agent_policy import PolicyAbstractAgent
+from ao.options.options import OptionAbstract
+from ao.options.options_explore import OptionExploreAbstract
 
 
 class AbstractAgent(metaclass=ABCMeta):

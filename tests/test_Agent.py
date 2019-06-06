@@ -1,7 +1,6 @@
 import unittest
-from agents.examples.agent_example import AgentOptionMontezuma
-from agents.examples.policy_examples_agent import QGraph
-from agents.examples.options_examples import OptionQArray
+from ao.examples.agent_example import AgentOptionMontezuma
+from ao.examples.policy_examples_agent import QGraph
 import numpy as np
 
 

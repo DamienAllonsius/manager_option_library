@@ -1,4 +1,4 @@
-from agents.policies.option.option_policy import PolicyAbstractOption
+from ao.policies.option.option_policy import PolicyAbstractOption
 import numpy as np
 
 

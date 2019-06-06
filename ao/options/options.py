@@ -6,7 +6,7 @@ penalty_end_option
 penalty_option_action
 """
 from abc import ABCMeta, abstractmethod
-from agents.policies.option.option_policy import PolicyAbstractOption
+from ao.policies.option.option_policy import PolicyAbstractOption
 
 
 class OptionAbstract(metaclass=ABCMeta):

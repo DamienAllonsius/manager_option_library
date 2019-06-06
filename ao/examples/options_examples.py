@@ -1,5 +1,5 @@
-from agents.options.options import OptionAbstract, OptionQLearning
-from agents.examples.policy_examples_option import QArray
+from ao.options.options import OptionAbstract, OptionQLearning
+from ao.examples.policy_examples_option import QArray
 
 
 class OptionQArray(OptionQLearning):

@@ -1,6 +1,6 @@
 import unittest
-from agents.examples.policy_examples_agent import QGraph
-from agents.examples.policy_examples_option import QArray
+from ao.examples.policy_examples_agent import QGraph
+from ao.examples.policy_examples_option import QArray
 import numpy as np
 
 

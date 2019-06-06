@@ -1,5 +1,5 @@
 import unittest
-from agents.examples.options_examples import OptionQArray
+from ao.examples.options_examples import OptionQArray
 import numpy as np
 
 

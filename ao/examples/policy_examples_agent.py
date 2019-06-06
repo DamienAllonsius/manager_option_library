@@ -1,5 +1,5 @@
 import numpy as np
-from agents.policies.agent.agent_policy import PolicyAbstractAgent
+from ao.policies.agent.agent_policy import PolicyAbstractAgent
 
 
 class QGraph(PolicyAbstractAgent):

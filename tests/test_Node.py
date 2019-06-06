@@ -1,5 +1,5 @@
 import unittest
-from agents.structures.tree import Node
+from ao.structures.tree import Node
 
 
 class NodeTest(unittest.TestCase):

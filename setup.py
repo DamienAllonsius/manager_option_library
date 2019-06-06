@@ -4,8 +4,8 @@ packages_ = find_packages()
 packages = [p for p in packages_ if not(p == 'tests')]
 
 setup(name='ao',
-      version='0.T',
-      description='A package to create agent following a Hierarchical Reinforcement Learning strategy',
+      version='0.1',
+      description='A package for making agents following a Hierarchical Reinforcement Learning strategy',
       url='git@github.com:DamienAllonsius/agent_option_library.git',
       author='Damien Allonsius',
       author_email='allonsius.damien@hotmail.fr',

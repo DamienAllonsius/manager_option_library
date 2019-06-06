@@ -1,9 +1,9 @@
-from agents.agent.agent import AbstractAgent, AbstractAgentOption
-from agents.examples.options_examples import OptionQArray
-from agents.examples.policy_examples_agent import QGraph
-from agents.options.options import OptionAbstract
-from agents.utils.utils import ShowRender
-from agents.options.options_explore import OptionRandomExplore
+from ao.agent.agent import AbstractAgent, AbstractAgentOption
+from ao.examples.options_examples import OptionQArray
+from ao.examples.policy_examples_agent import QGraph
+from ao.options.options import OptionAbstract
+from ao.utils.utils import ShowRender
+from ao.options.options_explore import OptionRandomExplore
 
 
 class AgentOptionMontezuma(AbstractAgentOption):
