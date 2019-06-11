@@ -158,8 +158,9 @@ class AbstractAgentOption(AbstractAgent):
             # If the option is done, update the agent
             if end_option:
                 self.update_agent(o_r_d_i, current_option, train_episode)
-                done = self.check_end_agent(o_r_d_i, current_option, train_episode)
                 current_option = None
+
+            done = self.check_end_agent(o_r_d_i, current_option, train_episode)
 
     def act(self, o_r_d_i, train_episode=None):
         """
@@ -171,16 +172,13 @@ class AbstractAgentOption(AbstractAgent):
         :return: an option
         """
         best_option_index, terminal_state = self.policy.find_best_action(train_episode)
-
         if terminal_state is None:
-
             # in this case : explore
             self.explore_option.reset(self.policy.get_current_state())
 
             return self.explore_option
 
         else:  # in this case, activate an option from the list self.option_set
-
             # get the information from the environment that the option needs to reset
             option_states = self.get_option_states(o_r_d_i, terminal_state)
 
@@ -205,7 +203,7 @@ class AbstractAgentOption(AbstractAgent):
 
         if train_episode is None:  # in simulate mode
             # compute total score
-            self.score = self.compute_total_score(o_r_d_i, option, train_episode)
+            self.score = self.compute_total_score(o_r_d_i, option.index, train_episode)
 
         else:  # in training mode
             self._update_policy(o_r_d_i, option.index, train_episode)
@@ -223,13 +221,12 @@ class AbstractAgentOption(AbstractAgent):
         :param train_episode:
         :return:
         """
-        # update the q value only if the option is not the explore_option
+        total_reward = None
         if option_index is not None:
-
-            # first, compute the total reward to update the policy
             total_reward = self.compute_total_reward(o_r_d_i, option_index, train_episode)
-            # then, update the policy
-            self.policy.update(o_r_d_i[0]["agent"], total_reward, option_index)
+
+        # then, update the policy
+        self.policy.update_policy(o_r_d_i[0]["agent"], total_reward, option_index)
 
     def train_agent(self, environment, seed=0):
         """
@@ -240,7 +237,7 @@ class AbstractAgentOption(AbstractAgent):
         np.random.seed(seed)
         environment.seed(seed)
 
-        for t in tqdm(range(1, self.parameters["number_episodes"])):
+        for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
 
     def simulate_agent(self, environment, seed=0):
@@ -278,7 +275,7 @@ class AbstractAgentOption(AbstractAgent):
         raise NotImplementedError()
 
     @abstractmethod
-    def compute_total_score(self, o_r_d_i, option, train_episode):
+    def compute_total_score(self, o_r_d_i, option_index, train_episode):
         """
         This function highly depends on the environment.
         :return: a float corresponding of the score of the agent accumulated so far
@@ -286,7 +283,7 @@ class AbstractAgentOption(AbstractAgent):
         raise NotImplementedError()
 
     @abstractmethod
-    def compute_total_reward(self, o_r_d_i, option, train_episode):
+    def compute_total_reward(self, o_r_d_i, option_index, train_episode):
         """
         This function highly depends on the environment.
         :return: a float corresponding of the current reward of the agent

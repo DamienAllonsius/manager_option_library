@@ -53,14 +53,15 @@ class QGraph(PolicyAbstractAgent):
         """
         if self.states == list():
             self.states.append(state)
-            self.values.append(list())
-            self.state_graph.append([0])
+            self.values.append([])
+            self.state_graph.append([])
             self.current_state_index = 0
 
             self.len_state_list = 1
             self.max_states = 1
 
         else:
+            assert (state != self.get_current_state())
             # Add the new state in the list of states and in the graph.
             # Get the index i of this state
             try:
@@ -70,18 +71,20 @@ class QGraph(PolicyAbstractAgent):
                 # In the graph: add i in the child nodes of the current state
                 if i not in self.state_graph[self.current_state_index]:
                     self.state_graph[self.current_state_index].append(i)
+                    self.values[self.current_state_index].append(0)
 
             except ValueError:
                 self.states.append(state)
-                self.values.append(list())
                 self.len_state_list += 1
                 i = self.len_state_list - 1
 
                 # add the state index i as a new node since it did not already exist
-                self.state_graph.append([i])
+                self.state_graph.append([])
+                self.values.append([])
 
                 # add a new node and connect it to the current_state_index
                 self.state_graph[self.current_state_index].append(i)
+                self.values[self.current_state_index].append(0)
 
             # update the maximum number of states
             if len(self.state_graph[self.current_state_index]) > self.max_states:
@@ -96,16 +99,28 @@ class QGraph(PolicyAbstractAgent):
         - in test mode : the best_option_index and the corresponding terminal state
         - in training mode : the best value possible OR (None,None) -> signal to activate the explore_option.
         """
+        # todo change this condition
+        if not self.state_graph[self.current_state_index]:  # no alternative: explore
+            return None, None
+
         if (train_episode is not None) and (np.random.rand() < self.parameters["probability_random_action_agent"]):
             return None, None
 
         else:
+            # Should implement the case where all actions have the same value.
             option_index = np.argmax(self.values[self.current_state_index])
             state_index = self.state_graph[self.current_state_index][option_index]
-            # todo If all actions have the same value ?
             return option_index, self.states[state_index]
 
-    def update(self, new_state, reward, action):
+    def update_policy(self, new_state, reward, action):
+        if action is None:
+            self._update_states(new_state)
+
+        else:
+            self.update_value(new_state, reward, action)
+            self._update_states(new_state)
+
+    def update_value(self, new_state, reward, action):
         """
         updates self.values
         Performs the Q learning update :
@@ -125,8 +140,6 @@ class QGraph(PolicyAbstractAgent):
 
         self.values[self.current_state_index][action] *= (1 - self.parameters["learning_rate"])
         self.values[self.current_state_index][action] += self.parameters["learning_rate"] * (reward + best_value)
-
-        self._update_states(new_state)
 
     def get_random_action(self):
         """

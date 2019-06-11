@@ -7,6 +7,7 @@ class OptionExploreAbstract(metaclass=ABCMeta):
     def __init__(self, action_space):
         self.initial_state = None
         self.action_space = action_space
+        self.index = None
 
     def __repr__(self):
         return "".join(["Option_explore(", str(self.initial_state), ")"])

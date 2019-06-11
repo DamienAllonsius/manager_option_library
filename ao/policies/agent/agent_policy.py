@@ -36,7 +36,7 @@ class PolicyAbstractAgent(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def update(self, *args, **kwargs):
+    def update_policy(self, *args, **kwargs):
         """
         updates the value of a state specified in the arguments
         :param args:

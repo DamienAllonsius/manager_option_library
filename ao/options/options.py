@@ -145,7 +145,8 @@ class OptionQLearning(OptionAbstract):
         :return: an action at the lower level
         """
         assert self.activated
-        return self.policy.find_best_action(train_episode)
+        ba = self.policy.find_best_action(train_episode)
+        return ba
 
     def reset(self, initial_state, current_state, terminal_state):
         """

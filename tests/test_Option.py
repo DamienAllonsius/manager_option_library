@@ -8,12 +8,11 @@ class OptionTest(unittest.TestCase):
         self.parameters = {"probability_random_action_option": 0.1,
                            "reward_end_option": 10,
                            "penalty_end_option": -10,
-                           "penalty_option_action": -1,
                            "learning_rate": 0.1}
 
-        self.o_r_d_i1 = [{"agent": "state 1", "option": "state option 1"}, 7, "true", "no-info"]
-        self.o_r_d_i2 = [{"agent": "terminal state", "option": "state option 2"}, 2, "False", "no-info"]
-        self.o_r_d_i3 = [{"agent": "state 3", "option": "state option 3"}, 17, "true", "no-info"]
+        self.o_r_d_i1 = [{"agent": "state 1", "option": "state option 1"}, 7, True, "no-info"]
+        self.o_r_d_i2 = [{"agent": "terminal state", "option": "state option 2"}, 2, False, "no-info"]
+        self.o_r_d_i3 = [{"agent": "state 3", "option": "state option 3"}, 17, True, "no-info"]
 
         self.option1 = OptionQArray(action_space=range(2), parameters=self.parameters, index=0)
         self.option1.reset("state 0", "state option 0", "terminal state")
@@ -46,7 +45,6 @@ class OptionTest(unittest.TestCase):
 
         self.option1.update_option(self.o_r_d_i1, action, train_episode=1)
         total_reward = self.o_r_d_i1[1]
-        total_reward += (action != 0) * self.parameters["penalty_option_action"]
 
         best_value = np.max(self.option1.policy.values[self.option1.policy.current_state_index])
 
@@ -72,7 +70,6 @@ class OptionTest(unittest.TestCase):
         self.option1.update_option(self.o_r_d_i1, action, train_episode=1)
         total_reward = self.o_r_d_i1[1]
         total_reward += self.parameters["penalty_end_option"]
-        total_reward += (action != 0) * self.parameters["penalty_option_action"]
 
         best_value = 0
 
@@ -116,13 +113,12 @@ class OptionTest(unittest.TestCase):
         total_reward.append(self.option1.compute_total_reward(self.o_r_d_i3, action2, end_option=True))
 
         total_reward_expected = list()
-        total_reward_expected.append(self.o_r_d_i1[1] + self.parameters["penalty_end_option"])
+        total_reward_expected.append(self.o_r_d_i1[1] +
+                                     self.parameters["penalty_end_option"])
         total_reward_expected.append(self.o_r_d_i1[1])
         total_reward_expected.append(self.o_r_d_i2[1] +
-                                     self.parameters["penalty_option_action"] +
                                      self.parameters["reward_end_option"])
         total_reward_expected.append(self.o_r_d_i3[1] +
-                                     self.parameters["penalty_option_action"] +
                                      self.parameters["penalty_end_option"])
 
         for k in range(len(total_reward)):

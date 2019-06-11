@@ -1,4 +1,4 @@
-from ao.agent.agent import AbstractAgent, AbstractAgentOption
+from ao.agent.agent import AbstractAgentOption
 from ao.examples.options_examples import OptionQArray
 from ao.examples.policy_examples_agent import QGraph
 from ao.options.options import OptionAbstract
@@ -23,12 +23,10 @@ class AgentOptionMontezuma(AbstractAgentOption):
     def compute_total_score(self, o_r_d_i, current_option, train_episode):
         return o_r_d_i[1]
 
-    def compute_total_reward(self, o_r_d_i, current_option, train_episode):
+    def compute_total_reward(self, o_r_d_i, option_index, train_episode):
         """
-        todo get a better parametrization
-        KISS for the moment
         :param o_r_d_i:
-        :param current_option:
+        :param option_index:
         :param train_episode:
         :return:
         """
@@ -64,21 +62,3 @@ class AgentOptionMontezuma(AbstractAgentOption):
 
     def get_option(self) -> OptionAbstract:
         return OptionQArray(self.action_space, self.parameters, len(self))
-
-
-class AgentQLearning(AbstractAgent):
-
-    def reset(self, initial_state):
-        pass
-
-    def act(self, *args, **kwargs):
-        pass
-
-    def update_agent(self, *args, **kwargs):
-        pass
-
-    def train_agent(self, *args, **kwargs):
-        pass
-
-    def simulate_agent(self, *args, **kwargs):
-        pass

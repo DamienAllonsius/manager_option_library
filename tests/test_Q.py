@@ -7,11 +7,12 @@ import numpy as np
 class QArrayTest(unittest.TestCase):
     def setUp(self):
         np.random.seed(0)
-        parameters = {"probability_random_action_option": 0.1,
-                      "learning_rate": 0.1,
-                      "random_decay": 0.01}
+        self.parameters = {"probability_random_action_option": 0.1,
+                           "penalty_option_action": -1,
+                           "learning_rate": 0.1,
+                           "random_decay": 0.01}
 
-        self.q = QArray(action_space=range(2), parameters=parameters)
+        self.q = QArray(action_space=range(2), parameters=self.parameters)
         self.q._update_states("state 0")
         self.q._update_states("state 1")
         self.q._update_states("state 2")
@@ -21,8 +22,10 @@ class QArrayTest(unittest.TestCase):
         self.q._update_states("state 4")
         self.q._update_states("state 4")
         self.q._update_states("state 5")
+        self.q._update_states("state 2")
+        self.q._update_states("state 5")
 
-        self.q2 = QArray(action_space=range(2), parameters=parameters)
+        self.q2 = QArray(action_space=range(2), parameters=self.parameters)
         self.q2._update_states("state 0")
         self.q2._update_states("state 1")
         self.q2._update_states("state 2")
@@ -31,7 +34,7 @@ class QArrayTest(unittest.TestCase):
         self.q2._update_states("state 0")
         self.q2._update_states("state 4")
 
-        self.q3 = QArray(action_space=range(2), parameters=parameters)
+        self.q3 = QArray(action_space=range(2), parameters=self.parameters)
         self.q3._update_states("state 0")
         self.q3._update_states("state 1")
         self.q3._update_states("state 2")
@@ -187,22 +190,23 @@ class QGraphTest(unittest.TestCase):
 
     def setUp(self):
         np.random.seed(0)
-        parameters = {"probability_random_action_agent": 0.1,
-                      "learning_rate": 0.1}
+        self.parameters = {"probability_random_action_agent": 0.1,
+                           "learning_rate": 0.1,
+                           "penalty_option_action": -1}
 
-        self.q = QGraph(parameters=parameters)
+        self.q = QGraph(parameters=self.parameters)
         self.q._update_states("state 0")
         self.q._update_states("state 1")
         self.q._update_states("state 2")
         self.q._update_states("state 0")
         self.q._update_states("state 3")
         self.q._update_states("state 4")
-        self.q._update_states("state 4")
-        self.q._update_states("state 4")
         self.q._update_states("state 5")
-        self.q.values = list(map(lambda x: np.random.randint(10, size=len(x)), self.q.state_graph))
+        self.q._update_states("state 1")
+        self.q._update_states("state 5")
+        self.q.values = list(map(lambda x: list(np.random.randint(10, size=len(x))), self.q.state_graph))
 
-        self.q2 = QGraph(parameters=parameters)
+        self.q2 = QGraph(parameters=self.parameters)
         self.q2._update_states("state 0")
         self.q2._update_states("state 1")
         self.q2._update_states("state 2")
@@ -210,26 +214,30 @@ class QGraphTest(unittest.TestCase):
         self.q2._update_states("state 3")
         self.q2._update_states("state 0")
         self.q2._update_states("state 4")
-        self.q2.values = list(map(lambda x: np.random.randint(10, size=len(x)), self.q.state_graph))
+        self.q2.values = list(map(lambda x: list(np.random.randint(10, size=len(x))), self.q2.state_graph))
 
-        self.q3 = QGraph(parameters=parameters)
+        self.q3 = QGraph(parameters=self.parameters)
         self.q3._update_states("state 0")
         self.q3._update_states("state 1")
         self.q3._update_states("state 2")
         self.q3._update_states("state 0")
         self.q3._update_states("state 3")
         self.q3._update_states("state 0")
-        self.q3.values = list(map(lambda x: np.random.randint(10, size=len(x)), self.q.state_graph))
+        self.q3.values = list(map(lambda x: list(np.random.randint(10, size=len(x))), self.q3.state_graph))
 
     def test_str(self):
-        self.assertEqual(str(self.q), "0: 0, 1, 3, \n1: 1, 2, \n2: 2, 0, \n3: 3, 4, \n4: 4, 5, \n5: 5, \n")
-        self.assertEqual(str(self.q2), "0: 0, 1, 3, 4, \n1: 1, 2, \n2: 2, 0, \n3: 3, 0, \n4: 4, \n")
-        self.assertEqual(str(self.q3), "0: 0, 1, 3, \n1: 1, 2, \n2: 2, 0, \n3: 3, 0, \n")
+        self.assertEqual(str(self.q), "0: 1, 3, \n1: 2, 5, \n2: 0, \n3: 4, \n4: 5, \n5: 1, \n")
+        self.assertEqual(str(self.q2), "0: 1, 3, 4, \n1: 2, \n2: 0, \n3: 0, \n4: \n")
+        self.assertEqual(str(self.q3), "0: 1, 3, \n1: 2, \n2: 0, \n3: 0, \n")
 
     def test_update_states(self):
-        self.assertEqual(self.q.max_states, 3)
-        self.assertEqual(self.q2.max_states, 4)
-        self.assertEqual(self.q3.max_states, 3)
+        self.assertRaises(AssertionError, self.q._update_states, "state 5")
+        self.assertRaises(AssertionError, self.q2._update_states, "state 4")
+        self.assertRaises(AssertionError, self.q3._update_states, "state 0")
+
+        self.assertEqual(self.q.max_states, 2)
+        self.assertEqual(self.q2.max_states, 3)
+        self.assertEqual(self.q3.max_states, 2)
 
         self.assertEqual(self.q.len_state_list, 6)
         self.assertEqual(self.q2.len_state_list, 5)
@@ -243,9 +251,9 @@ class QGraphTest(unittest.TestCase):
         self.assertEqual(self.q2.states, ["state 0", "state 1", "state 2", "state 3", "state 4"])
         self.assertEqual(self.q3.states, ["state 0", "state 1", "state 2", "state 3"])
 
-        self.assertEqual(self.q.state_graph, [[0, 1, 3], [1, 2], [2, 0], [3, 4], [4, 5], [5]])
-        self.assertEqual(self.q2.state_graph, [[0, 1, 3, 4], [1, 2], [2, 0], [3, 0], [4]])
-        self.assertEqual(self.q3.state_graph, [[0, 1, 3], [1, 2], [2, 0], [3, 0]])
+        self.assertEqual(self.q.state_graph, [[1, 3], [2, 5], [0], [4], [5], [1]])
+        self.assertEqual(self.q2.state_graph, [[1, 3, 4], [2], [0], [0], []])
+        self.assertEqual(self.q3.state_graph, [[1, 3], [2], [0], [0]])
 
     def test_reset(self):
         l_state_list = self.q.len_state_list
@@ -264,7 +272,7 @@ class QGraphTest(unittest.TestCase):
     def test_find_best_action(self):
         self.q.current_state_index = 0
         self.q.values[0][1] = 100
-        self.assertEqual(self.q.find_best_action(), (1, "state 1"))
+        self.assertEqual(self.q.find_best_action(), (1, "state 3"))
 
         action = set()
         for k in range(1000):
@@ -272,22 +280,26 @@ class QGraphTest(unittest.TestCase):
 
         expected_returned = set()
         expected_returned.add((None, None))
-        expected_returned.add((1, "state 1"))
+        expected_returned.add((1, "state 3"))
 
         self.assertEqual(action, expected_returned)
 
         self.q.parameters["probability_random_action_agent"] = 0
-        idmax = np.argmax(self.q.values[self.q.current_state_index])
+        idmax = np.argmax(np.array([self.q.values[self.q.current_state_index]]))
         self.assertEqual((idmax, self.q.states[self.q.state_graph[self.q.current_state_index][idmax]]),
                          self.q.find_best_action())
 
         self.q2.parameters["probability_random_action_agent"] = 0
-        idmax = np.argmax(self.q2.values[self.q2.current_state_index])
-        self.assertEqual((idmax, self.q2.states[self.q2.state_graph[self.q2.current_state_index][idmax]]),
-                         self.q2.find_best_action())
+        if len(self.q2.values[self.q2.current_state_index]) == 0:
+            self.assertEqual((None, None), self.q2.find_best_action())
+        else:
+            idmax = np.argmax(np.array(self.q2.values[self.q2.current_state_index]))
+
+            self.assertEqual((idmax, self.q2.states[self.q2.state_graph[self.q2.current_state_index][idmax]]),
+                             self.q2.find_best_action())
 
         self.q3.parameters["probability_random_action_agent"] = 0
-        idmax = np.argmax(self.q3.values[self.q3.current_state_index])
+        idmax = np.argmax(np.array(self.q3.values[self.q3.current_state_index]))
         self.assertEqual((idmax, self.q3.states[self.q3.state_graph[self.q3.current_state_index][idmax]]),
                          self.q3.find_best_action())
 
@@ -301,9 +313,9 @@ class QGraphTest(unittest.TestCase):
         action = 1
         other_action = 0
         best_value = 0
-        self.q.values = list(map(lambda x: x*0, self.q.values))
+        self.q.values = list(map(lambda x: [0]*len(x), self.q.values))
 
-        self.q.update(new_state1, reward, action)
+        self.q.update_policy(new_state1, reward, action)
         self.assertEqual(self.q.values[0][other_action], 0)
         self.assertEqual(self.q.values[0][action], self.q.parameters["learning_rate"] * (reward + best_value))
         self.assertEqual(self.q.current_state_index, new_state1_index)
@@ -323,8 +335,9 @@ class QGraphTest(unittest.TestCase):
         best_value = max(val_new_state2)
         reward = 10
 
-        self.q.update(new_state2, reward, action)
+        self.q.update_policy(new_state2, reward, action)
         self.assertEqual(self.q.values[new_state1_index][other_action], val_new_state1[other_action])
+
         self.assertEqual(self.q.current_state_index, new_state2_index)
 
         self.assertEqual(self.q.values[new_state1_index][action],
@@ -335,19 +348,21 @@ class QGraphTest(unittest.TestCase):
         randomq = set()
         randomq2 = set()
         randomq3 = set()
+        self.q.current_state_index = 0
+        self.q2.current_state_index = 0
         for k in range(100):
             randomq.add(self.q.get_random_action())
             randomq2.add(self.q2.get_random_action())
             randomq3.add(self.q3.get_random_action())
 
-        self.assertEqual(randomq, {5})
-        self.assertEqual(randomq2, {4})
-        self.assertEqual(randomq3, {0, 1, 3})
+        self.assertEqual(randomq, {1, 3})
+        self.assertEqual(randomq2, {1, 3, 4})
+        self.assertEqual(randomq3, {1, 3})
 
     def test_max_successors(self):
-        self.assertEqual(self.q.max_number_successors(), 3)
-        self.assertEqual(self.q2.max_number_successors(), 4)
-        self.assertEqual(self.q.max_number_successors(), 3)
+        self.assertEqual(self.q.max_number_successors(), 2)
+        self.assertEqual(self.q2.max_number_successors(), 3)
+        self.assertEqual(self.q.max_number_successors(), 2)
 
     def test_get_current_state(self):
         self.assertEqual(self.q.get_current_state(), "state 5")
