@@ -155,7 +155,10 @@ class QGraph(PolicyAbstractAgent):
         """
         :return: the current state (not the index, rather the node.data)
         """
-        return self.states[self.current_state_index]
+        if not self.states:  # no states !
+            return None
+        else:
+            return self.states[self.current_state_index]
 
 # class QTree(PolicyAbstractAgent):
 #     """
