@@ -102,7 +102,7 @@ class ShowRender(object):
         if key == ord(" "):
             self.agent_view = not self.agent_view
             self.blurred_render = self.agent_view
-            self.gray_scale_render = not self.agent_view
+            self.gray_scale_render = True
 
     def key_release(self, key, mod):
         pass

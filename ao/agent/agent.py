@@ -126,12 +126,10 @@ class AbstractAgentOption(AbstractAgent):
         # The initial observation
         obs = environment.reset()
         o_r_d_i = [obs]
-
         # Reset all the parameters
         self.reset(o_r_d_i[0]["agent"])
         done = False
         current_option = None
-
         # Render the current state
         self.display_state(environment, train_episode)
 
