@@ -129,11 +129,12 @@ class AgentQ(AbstractAgent):
     def reset(self, initial_state):
         self.policy.reset(initial_state)
 
-    def compute_total_score(self, o_r_d_i):
+    @staticmethod
+    def compute_total_score(o_r_d_i):
         return o_r_d_i[1]
 
     def act(self, train_episode):
-        if (train_episode is not None) and (np.random.rand() < self.parameters["probability_explore_agent"]):
+        if (train_episode is not None) and (np.random.rand() < self.parameters["probability_random_action_agent"]):
             return self.policy.get_random_action()
 
         else:
@@ -141,13 +142,8 @@ class AgentQ(AbstractAgent):
 
     def update_agent(self, o_r_d_i, action, train_episode):
         total_reward = self.compute_total_reward(o_r_d_i, train_episode)
-        self.policy.update_policy(o_r_d_i[0], total_reward, action, False)
+        self.policy.update_policy(o_r_d_i[0], total_reward, action, False, train_episode)
         self.score += self.compute_total_score(o_r_d_i)
 
     def compute_total_reward(self, o_r_d_i, train_episode):
-        total_reward = o_r_d_i[1]
-        lost_life = o_r_d_i[3]['ale.lives'] != 6
-        if train_episode is None:
-            total_reward += lost_life * self.parameters["penalty_lost_life_for_agent"]
-
-        return total_reward
+        NotImplementedError()

@@ -72,7 +72,7 @@ class QArray(PolicyAbstractOption):
         else:
             return np.argmax(self.values[self.current_state_index])
 
-    def update_policy(self, new_state, reward, action, end_option, train_episode):
+    def update_policy(self, new_state, reward, action, end_option, train_episode=None):
         """
         updates the values of the policy and the state list (with an update on the current state).
         Only updates the current state in the simulation phase which corresponds to train_episode == None.

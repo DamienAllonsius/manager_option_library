@@ -2,7 +2,7 @@ import unittest
 from ao.examples.policy_examples_agent import QGraph
 from ao.examples.policy_examples_option import QArray
 import numpy as np
-
+from copy import deepcopy
 
 class QArrayTest(unittest.TestCase):
     def setUp(self):
@@ -133,7 +133,7 @@ class QArrayTest(unittest.TestCase):
         best_value = 0
         end_option = False
 
-        self.q.update_policy(new_state1, reward, action, end_option)
+        self.q.update_policy(new_state1, reward, action, end_option, 0)
         self.assertEqual(self.q.values[0][other_action], 0)
         self.assertEqual(self.q.values[0][action], self.q.parameters["learning_rate"] * (reward + best_value))
         self.assertEqual(self.q.current_state_index, new_state1_index)
@@ -154,7 +154,7 @@ class QArrayTest(unittest.TestCase):
         best_value = max(val_new_state2)
         reward = 10
 
-        self.q.update_policy(new_state2, reward, action, end_option)
+        self.q.update_policy(new_state2, reward, action, end_option, 0)
         self.assertEqual(self.q.values[new_state1_index][other_action], val_new_state1[other_action])
         self.assertEqual(self.q.current_state_index, new_state2_index)
 
@@ -177,13 +177,19 @@ class QArrayTest(unittest.TestCase):
         best_value = 0  # end_option is True !
         reward = 10
 
-        self.q.update_policy(new_state3, reward, action, end_option)
+        self.q.update_policy(new_state3, reward, action, end_option, 0)
         self.assertEqual(self.q.values[new_state2_index][other_action], val_new_state2[other_action])
         self.assertEqual(self.q.current_state_index, new_state3_index)
 
         self.assertEqual(self.q.values[new_state2_index][action],
                          (1 - self.q.parameters["learning_rate"]) * val_new_state2[action]
                          + self.q.parameters["learning_rate"] * (reward + best_value))
+
+        # other test
+        val3 = deepcopy(self.q.values)
+        self.q.update_policy(new_state2, reward, action, end_option, None)
+        self.assertEqual(self.q.current_state_index, 2)
+        self.assertTrue(np.array_equal(self.q.values, val3))
 
 
 class QGraphTest(unittest.TestCase):
