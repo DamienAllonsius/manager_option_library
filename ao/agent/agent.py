@@ -11,6 +11,7 @@ from tqdm import tqdm
 from ao.policies.agent.agent_policy import PolicyAbstractAgent
 from ao.options.options import OptionAbstract
 from ao.options.options_explore import OptionExploreAbstract
+from ao.utils.utils import ShowRender
 
 
 class AbstractAgent(metaclass=ABCMeta):
@@ -66,6 +67,12 @@ class AbstractAgent(metaclass=ABCMeta):
         :return:
         """
         raise NotImplementedError()
+
+    def display_state(self, environment):
+        if self.show_render is None:
+            self.show_render = ShowRender(environment)
+
+        self.show_render.display()
 
 
 class AbstractAgentOption(AbstractAgent):
@@ -131,7 +138,7 @@ class AbstractAgentOption(AbstractAgent):
         done = False
         current_option = None
         # Render the current state
-        self.display_state(environment, train_episode)
+        self.display_state(environment)
 
         while not done:
             # If no option is activated then choose one
@@ -145,7 +152,7 @@ class AbstractAgentOption(AbstractAgent):
             # todo record the learning curve
             o_r_d_i = environment.step(action)
 
-            self.display_state(environment, train_episode)
+            self.display_state(environment)
 
             # update the option
             current_option.update_option(o_r_d_i, action, train_episode)
@@ -259,11 +266,6 @@ class AbstractAgentOption(AbstractAgent):
         # write the results and write that the experiment went well
         save_results.write_reward(self.parameters["number_episodes"], self.score)
         save_results.write_message("Experiment complete.")
-
-    @staticmethod
-    @abstractmethod
-    def display_state(environment, train_episode):
-        raise NotImplementedError()
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):

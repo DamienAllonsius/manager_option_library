@@ -119,7 +119,10 @@ class OptionQLearning(OptionAbstract):
     def update_option(self, o_r_d_i, action, train_episode=None):
         """
         updates the parameters of the option, in particular self.policy.
-        Train mode and simulate mode are distinguished by the value of train_episode
+        Train mode and simulate mode are distinguished by the value of train_episode.
+        self.policy.update_policy :
+        - In simulation mode : updates only the current state.
+        - In learning mode : updates also the values of Q function.
         :param o_r_d_i:  Observation, Reward, Done, Info
         :param action: the last action performed
         :param train_episode: the number of the current training episode
@@ -128,12 +131,11 @@ class OptionQLearning(OptionAbstract):
         # check if the option is done
         end_option = self.check_end_option(o_r_d_i[0]["agent"])
 
-        if train_episode is not None:
-            # compute the rewards
-            total_reward = self.compute_total_reward(o_r_d_i, action, end_option)
+        # compute the rewards
+        total_reward = self.compute_total_reward(o_r_d_i, action, end_option)
 
-            # update the q function
-            self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option)
+        # update the q function
+        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
 
         # compute the total score
         self.score = self.compute_total_score(o_r_d_i, action, end_option, train_episode)

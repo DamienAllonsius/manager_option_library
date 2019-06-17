@@ -72,29 +72,33 @@ class QArray(PolicyAbstractOption):
         else:
             return np.argmax(self.values[self.current_state_index])
 
-    def update_policy(self, new_state, reward, action, end_option):
+    def update_policy(self, new_state, reward, action, end_option, train_episode):
         """
-        updates the values of the policy and the state list (with an update on the current state)
+        updates the values of the policy and the state list (with an update on the current state).
+        Only updates the current state in the simulation phase which corresponds to train_episode == None.
         :param new_state:
         :param reward:
         :param action:
         :param end_option:
+        :param train_episode:
+        type == None -> simulation,
+        type == integer -> training.
         :return: void
         """
-
-        if end_option:
-            best_value = 0
-            # todo, take the mean with other options
-        else:
-            try:
-                new_state_idx = self.state_list.index(new_state)
-                best_value = np.max(self.values[new_state_idx])
-
-            except ValueError:
+        if train_episode is not None:  # training phase: update value
+            if end_option:
                 best_value = 0
+                # todo, take the mean with other options
+            else:
+                try:
+                    new_state_idx = self.state_list.index(new_state)
+                    best_value = np.max(self.values[new_state_idx])
 
-        self.values[self.current_state_index][action] *= (1 - self.parameters["learning_rate"])
-        self.values[self.current_state_index][action] += self.parameters["learning_rate"] * (reward + best_value)
+                except ValueError:
+                    best_value = 0
+
+            self.values[self.current_state_index][action] *= (1 - self.parameters["learning_rate"])
+            self.values[self.current_state_index][action] += self.parameters["learning_rate"] * (reward + best_value)
 
         self._update_states(new_state)
 
