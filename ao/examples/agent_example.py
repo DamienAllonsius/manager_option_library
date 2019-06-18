@@ -8,6 +8,8 @@ from tqdm import tqdm
 import numpy as np
 from ao.examples.policy_examples_option import QArray
 from ao.utils.utils import SaveResults
+from ao.utils.utils import ShowRenderSwitch
+from abc import abstractmethod
 
 
 class AgentOptionMontezuma(AbstractAgentOption):
@@ -62,35 +64,43 @@ class AgentOptionMontezuma(AbstractAgentOption):
         return OptionQArray(self.action_space, self.parameters, len(self))
 
 
-class AgentQ(AbstractAgent):
+class PlainQLearning(AbstractAgent):
     """
     Plan Q Learning implementation.
     *NOT TESTED*
     """
 
-    def __init__(self, number_actions, parameters, current_state):
+    def __init__(self, action_space, parameters):
         self.parameters = parameters
-        self.number_actions = number_actions
-        self.current_state = current_state
-        self.policy = QArray(current_state, number_actions)
+        self.current_state = None
+        self.policy = QArray(action_space, parameters)
         self.score = 0
+        self.show_render = None
 
     def _train_simulate_agent(self, env, train_episode=None):
-        for _ in tqdm(range(1, self.parameters["number_episodes"] + 1)):
+        # reset the parameters
+        obs = env.reset()
+        self.reset(obs)
+        done = False
 
-            # reset the parameters
-            obs = env.reset()
-            self.reset(obs)
-            done = False
+        # render the image
+        self.show_render.display()
 
-            # render the image
-            self.display_state(env)
+        while not done:
+            # choose an action
+            action = self.act(train_episode)
 
-            while not done:
-                action = self.act(train_episode)
-                o_r_d_i = env.step(action)
-                self.update_agent(o_r_d_i, action, train_episode)
-                self.display_state(env)
+            # get the output
+            o_r_d_i = env.step(action)
+
+            # update the agent
+            self.update_agent(o_r_d_i, action, train_episode)
+
+            # display the observation
+            self.show_render.display()
+
+            # update variable done
+            done = self.check_end_agent(o_r_d_i)
 
     def train_agent(self, environment, seed=0):
         """
@@ -100,6 +110,9 @@ class AgentQ(AbstractAgent):
         # set the seeds
         np.random.seed(seed)
         environment.seed(seed)
+
+        # prepare to display the states
+        self.show_render = ShowRenderSwitch(environment)
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
@@ -141,9 +154,17 @@ class AgentQ(AbstractAgent):
             return self.policy.find_best_action(self.current_state)
 
     def update_agent(self, o_r_d_i, action, train_episode):
+        # update the policy
         total_reward = self.compute_total_reward(o_r_d_i, train_episode)
         self.policy.update_policy(o_r_d_i[0], total_reward, action, False, train_episode)
+
+        # update the score
         self.score += self.compute_total_score(o_r_d_i)
 
+    @abstractmethod
     def compute_total_reward(self, o_r_d_i, train_episode):
-        NotImplementedError()
+        raise NotImplementedError()
+
+    @abstractmethod
+    def check_end_agent(self, *args, **kwargs) -> bool:
+        raise NotImplementedError()

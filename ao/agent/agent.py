@@ -68,12 +68,6 @@ class AbstractAgent(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    def display_state(self, environment):
-        if self.show_render is None:
-            self.show_render = ShowRender(environment)
-
-        self.show_render.display()
-
 
 class AbstractAgentOption(AbstractAgent):
     """
@@ -94,6 +88,8 @@ class AbstractAgentOption(AbstractAgent):
 
         self.policy = self.get_policy()
         self.explore_option = self.get_explore_option()
+
+        self.show_render = None
 
         AbstractAgentOption.check_type(self.policy, PolicyAbstractAgent)
         AbstractAgentOption.check_type(self.explore_option, OptionExploreAbstract)
@@ -138,7 +134,7 @@ class AbstractAgentOption(AbstractAgent):
         done = False
         current_option = None
         # Render the current state
-        self.display_state(environment)
+        self.show_render.display()
 
         while not done:
             # If no option is activated then choose one
@@ -152,7 +148,7 @@ class AbstractAgentOption(AbstractAgent):
             # todo record the learning curve
             o_r_d_i = environment.step(action)
 
-            self.display_state(environment)
+            self.show_render.display()
 
             # update the option
             current_option.update_option(o_r_d_i, action, train_episode)
@@ -242,6 +238,9 @@ class AbstractAgentOption(AbstractAgent):
         np.random.seed(seed)
         environment.seed(seed)
 
+        # prepare to display the states
+        self.show_render = ShowRender(environment)
+
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
 
@@ -262,6 +261,9 @@ class AbstractAgentOption(AbstractAgent):
 
         # simulate
         self._train_simulate_agent(environment)
+
+        # prepare to display the states
+        self.show_render = ShowRender(environment)
 
         # write the results and write that the experiment went well
         save_results.write_reward(self.parameters["number_episodes"], self.score)

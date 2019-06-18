@@ -108,6 +108,32 @@ class ShowRender(object):
         pass
 
 
+class ShowRenderSwitch(object):
+    """
+    Like class ShowRender but can only switch from display to not display
+    """
+
+    def __init__(self, env):
+        self.env = env
+        self.display_learning = True
+        self.env.render()
+        self.env.unwrapped.viewer.window.on_key_press = self.key_press
+        self.env.unwrapped.viewer.window.on_key_release = self.key_release
+
+    def display(self):
+        if self.display_learning:
+            self.env.render()
+        else:
+            self.env.unwrapped.viewer.window.dispatch_events()
+
+    def key_press(self, key, mod):
+        if key == ord("d"):
+            self.display_learning = not self.display_learning
+
+    def key_release(self, key, mod):
+        pass
+
+
 def constrain_type(f):
     def decorated(*args, **kwargs):
         output = f(*args, **kwargs)
