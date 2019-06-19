@@ -33,14 +33,24 @@ class SaveResults(object):
         if not os.path.exists(dir_name):
             os.mkdir(dir_name)
 
-        dir_name += "/" + \
-                    time.asctime(time.localtime(time.time())).replace(" ", "_")
+        dir_name += time.asctime(time.localtime(time.time())).replace(" ", "_")
         os.mkdir(dir_name)
+        print(dir_name)
 
         return dir_name
 
     def write_message(self, message):
+        """
+        todo : replace open and close by "with ... "
+        :param message:
+        :return:
+        """
         f = open(self.file_results_name, "a")
+        f.write(message)
+        f.close()
+
+    def write_message_in_a_file(self, file_name, message):
+        f = open(self.dir_path + "/" + file_name, "a")
         f.write(message)
         f.close()
 
@@ -101,7 +111,7 @@ class ShowRender(object):
 
         if key == ord(" "):
             self.agent_view = not self.agent_view
-            self.blurred_render = self.agent_view
+            self.blurred_render = True
             self.gray_scale_render = True
 
     def key_release(self, key, mod):

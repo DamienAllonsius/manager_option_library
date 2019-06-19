@@ -57,22 +57,27 @@ class QArray(PolicyAbstractOption):
         self.current_state_index = i
 
     def _activate_random(self, train_episode):
-        return np.random.rand() < self.parameters["probability_random_action_option"] * \
-               np.exp(-train_episode * self.parameters["random_decay"])
+        # either the random can be triggered by flipping a coin
+        rdm = np.random.rand() < self.parameters["probability_random_action_option"] * \
+            np.exp(-train_episode * self.parameters["random_decay"])
+
+        # or if all values are equal
+        val = np.all(self.values[self.current_state_index][0] == self.values[self.current_state_index])
+
+        return rdm or val
 
     def find_best_action(self, train_episode=None):
         """
         :param train_episode:
         :return: an action at the lower level
         """
-
         if (train_episode is not None) and self._activate_random(train_episode):
             return np.random.randint(self.number_actions)
 
         else:
             return np.argmax(self.values[self.current_state_index])
 
-    def update_policy(self, new_state, reward, action, end_option, train_episode=None):
+    def update_policy(self, new_state, reward, action, end_option, train_episode):
         """
         updates the values of the policy and the state list (with an update on the current state).
         Only updates the current state in the simulation phase which corresponds to train_episode == None.
@@ -88,7 +93,7 @@ class QArray(PolicyAbstractOption):
         if train_episode is not None:  # training phase: update value
             if end_option:
                 best_value = 0
-                # todo, take the mean with other options
+                # todo, take the max with other options
             else:
                 try:
                     new_state_idx = self.state_list.index(new_state)

@@ -12,6 +12,7 @@ from ao.policies.agent.agent_policy import PolicyAbstractAgent
 from ao.options.options import OptionAbstract
 from ao.options.options_explore import OptionExploreAbstract
 from ao.utils.utils import ShowRender
+from collections import deque
 
 
 class AbstractAgent(metaclass=ABCMeta):
@@ -91,6 +92,10 @@ class AbstractAgentOption(AbstractAgent):
 
         self.show_render = None
 
+        self.save_results = SaveResults(self.parameters)
+        self.save_results.write_message_in_a_file("learning_curve", "0")
+        self.success = deque(maxlen=100)
+
         AbstractAgentOption.check_type(self.policy, PolicyAbstractAgent)
         AbstractAgentOption.check_type(self.explore_option, OptionExploreAbstract)
         AbstractAgentOption.check_type(self.get_option(), OptionAbstract)
@@ -114,7 +119,7 @@ class AbstractAgentOption(AbstractAgent):
         self.score = 0
         self.policy.reset(initial_state)
 
-    def _train_simulate_agent(self, environment, train_episode=None):
+    def _train_simulate_agent(self, env, train_episode=None):
         """
         Method used to train or simulate the agent
 
@@ -122,12 +127,12 @@ class AbstractAgentOption(AbstractAgent):
         b) option acts and updates
         c) if a new state is found then update agent
 
-        :param environment:
+        :param env:
         :param train_episode: the episode of training.
         :return:
         """
         # The initial observation
-        obs = environment.reset()
+        obs = env.reset()
         o_r_d_i = [obs]
         # Reset all the parameters
         self.reset(o_r_d_i[0]["agent"])
@@ -142,11 +147,10 @@ class AbstractAgentOption(AbstractAgent):
                 current_option = self.act(o_r_d_i, train_episode)
 
             # choose an action
-            action = current_option.act()
+            action = current_option.act(train_episode)
 
             # make an action and display the state space
-            # todo record the learning curve
-            o_r_d_i = environment.step(action)
+            o_r_d_i = env.step(action)
 
             self.show_render.display()
 
@@ -158,6 +162,9 @@ class AbstractAgentOption(AbstractAgent):
 
             # If the option is done, update the agent
             if end_option:
+                if type(current_option).__bases__[0].__name__ != "OptionExploreAbstract":
+                    self.write_success_rate_transitions(o_r_d_i, current_option)
+
                 self.update_agent(o_r_d_i, current_option, train_episode)
                 current_option = None
 
@@ -180,7 +187,7 @@ class AbstractAgentOption(AbstractAgent):
             return self.explore_option
 
         else:  # in this case, activate an option from the list self.option_set
-            # get the information from the environment that the option needs to reset
+            # get the information from the env that the option needs to reset
             option_states = self.get_option_states(o_r_d_i, terminal_state)
 
             # set the parameters  of the option with that states
@@ -238,6 +245,9 @@ class AbstractAgentOption(AbstractAgent):
         np.random.seed(seed)
         environment.seed(seed)
 
+        # prepare the file for the results
+        self.save_results.write_setting()
+
         # prepare to display the states
         self.show_render = ShowRender(environment)
 
@@ -255,19 +265,31 @@ class AbstractAgentOption(AbstractAgent):
         environment.seed(seed)
 
         # prepare the file for the results
-        save_results = SaveResults(self.parameters)
-        save_results.write_setting()
-        save_results.set_file_results_name(seed)
-
-        # simulate
-        self._train_simulate_agent(environment)
+        self.save_results.set_file_results_name(seed)
 
         # prepare to display the states
         self.show_render = ShowRender(environment)
 
+        # simulate
+        self._train_simulate_agent(environment)
+
         # write the results and write that the experiment went well
-        save_results.write_reward(self.parameters["number_episodes"], self.score)
-        save_results.write_message("Experiment complete.")
+        self.save_results.write_reward(self.parameters["number_episodes"], self.score)
+        self.save_results.write_message("Experiment complete.")
+
+    def write_success_rate_transitions(self, o_r_d_i, current_option):
+        if current_option.terminal_state == o_r_d_i[0]["agent"]:
+            self.success.append(1)
+        if current_option.terminal_state != o_r_d_i[0]["agent"]:
+            self.success.append(0)
+        self.save_results.write_message_in_a_file("success_rate_transition", str(sum(self.success)) + "\n")
+
+    def print_success_rate_transitions(self, o_r_d_i, current_option):
+        if current_option.terminal_state == o_r_d_i[0]["agent"]:
+            self.success.append(1)
+        if current_option.terminal_state != o_r_d_i[0]["agent"]:
+            self.success.append(0)
+        print(str(sum(self.success)) + "%")
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):

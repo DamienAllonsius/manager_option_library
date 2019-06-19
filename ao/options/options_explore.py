@@ -36,7 +36,7 @@ class OptionExploreAbstract(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def act(self):
+    def act(self, *args, **kwargs):
         raise NotImplementedError()
 
 
@@ -52,7 +52,7 @@ class OptionRandomExplore(OptionExploreAbstract):
         """
         pass
 
-    def act(self):
+    def act(self, train_episode):
         """
         :return: a random action from the action space
         """
