@@ -94,7 +94,6 @@ class AbstractAgentOption(AbstractAgent):
         self.show_render = None
 
         self.save_results = SaveResults(self.parameters)
-        self.save_results.write_message_in_a_file("learning_curve", "0")
         self.success = deque(maxlen=100)
 
         AbstractAgentOption.check_type(self.policy, PolicyAbstractAgent)
