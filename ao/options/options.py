@@ -116,7 +116,7 @@ class OptionQLearning(OptionAbstract):
         super().__init__(action_space, parameters, index)
         self.policy = self.get_policy()
 
-    def update_option(self, o_r_d_i, action, train_episode=None):
+    def update_option(self, o_r_d_i, intra_reward, action, end_option, train_episode=None):
         """
         updates the parameters of the option, in particular self.policy.
         Train mode and simulate mode are distinguished by the value of train_episode.
@@ -124,15 +124,14 @@ class OptionQLearning(OptionAbstract):
         - In simulation mode : updates only the current state.
         - In learning mode : updates also the values of Q function.
         :param o_r_d_i:  Observation, Reward, Done, Info
+        :param intra_reward: an additional reward given when the option reaches a terminal state
         :param action: the last action performed
+        :param end_option: check if the option ended
         :param train_episode: the number of the current training episode
         :return: void
         """
-        # check if the option is done
-        end_option = self.check_end_option(o_r_d_i[0]["agent"])
-
         # compute the rewards
-        total_reward = self.compute_total_reward(o_r_d_i, action, end_option)
+        total_reward = self.compute_total_reward(o_r_d_i, intra_reward, action, end_option)
 
         # update the q function
         self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
@@ -168,15 +167,16 @@ class OptionQLearning(OptionAbstract):
         self.activated = True
 
     @abstractmethod
-    def compute_total_reward(self, o_r_d_i, action, end_option):
+    def compute_total_reward(self, o_r_d_i, intra_reward, action, end_option):
         """
         Computes the total reward following actions to update the policy
         This function depends on the environment in which the agent evolves.
         The child class will compute the total reward here, depending on the specific
         features of the environment.
-        :param o_r_d_i: Observation, Reward, Done, Info
-        :param action: The last action performed
-        :param end_option: True iff the option ended
+        :param o_r_d_i:  Observation, Reward, Done, Info
+        :param intra_reward: an additional reward given when the option reaches a terminal state
+        :param action: the last action performed
+        :param end_option: True iff the option ended.
         :return: The total reward for a given step. This is needed to update the policy.
         """
         raise NotImplementedError()

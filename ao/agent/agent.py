@@ -13,6 +13,7 @@ from ao.options.options import OptionAbstract
 from ao.options.options_explore import OptionExploreAbstract
 from ao.utils.utils import ShowRender
 from collections import deque
+import matplotlib.pyplot as plt
 
 
 class AbstractAgent(metaclass=ABCMeta):
@@ -154,11 +155,12 @@ class AbstractAgentOption(AbstractAgent):
 
             self.show_render.display()
 
-            # update the option
-            current_option.update_option(o_r_d_i, action, train_episode)
-
             # check if the option ended
             end_option = current_option.check_end_option(o_r_d_i[0]["agent"])
+
+            # update the option
+            intra_reward = self.get_intra_reward(end_option, o_r_d_i[0]["option"])
+            current_option.update_option(o_r_d_i, intra_reward, action, end_option, train_episode)
 
             # If the option is done, update the agent
             if end_option:
@@ -169,6 +171,21 @@ class AbstractAgentOption(AbstractAgent):
                 current_option = None
 
             done = self.check_end_agent(o_r_d_i, current_option, train_episode)
+
+    def get_intra_reward(self, end_option, next_state):
+        """
+        returns a reward based on the maximum value of the next_state over all options.
+        :param end_option: if the option ended or not
+        :param next_state: the next lower level state
+        :return: an integer corresponding to the value of the last action:
+        - if end_option is False : 0
+        - if end_option is True : maximum value over all options of this state
+        """
+        if not end_option:
+            return 0
+
+        else:
+            return 0  # todo
 
     def act(self, o_r_d_i, train_episode=None):
         """
@@ -254,6 +271,9 @@ class AbstractAgentOption(AbstractAgent):
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
 
+            if not t % 200:
+                self.plot_success_rate_transitions()
+
     def simulate_agent(self, environment, seed=0):
         """
         Method used to train the RL agent.
@@ -290,6 +310,16 @@ class AbstractAgentOption(AbstractAgent):
         if current_option.terminal_state != o_r_d_i[0]["agent"]:
             self.success.append(0)
         print(str(sum(self.success)) + "%")
+
+    def plot_success_rate_transitions(self):
+        f = open(str(self.save_results.dir_path) + "/success_rate_transition")
+        lines = f.readlines()
+        f.close()
+        x = [float(line.split()[0]) for line in lines]
+        plt.plot(x)
+        plt.title("success rate of options' transitions")
+        plt.draw()
+        plt.pause(.001)
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):
