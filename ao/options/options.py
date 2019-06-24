@@ -102,6 +102,15 @@ class OptionAbstract(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def get_value(self, state):
+        """
+        get the value of parameter state
+        :param state:
+        :return: a float
+        """
+        raise NotImplementedError()
+
 
 class OptionQLearning(OptionAbstract):
     """

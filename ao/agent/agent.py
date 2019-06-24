@@ -158,7 +158,7 @@ class AbstractAgentOption(AbstractAgent):
             end_option = current_option.check_end_option(o_r_d_i[0]["agent"])
 
             # update the option
-            intra_reward = self.get_intra_reward(end_option, o_r_d_i[0]["option"])
+            intra_reward = self.get_intra_reward(end_option, o_r_d_i[0]["option"], current_option, train_episode)
             current_option.update_option(o_r_d_i, intra_reward, action, end_option, train_episode)
 
             # If the option is done, update the agent
@@ -171,20 +171,29 @@ class AbstractAgentOption(AbstractAgent):
 
             done = self.check_end_agent(o_r_d_i, current_option, train_episode)
 
-    def get_intra_reward(self, end_option, next_state):
+    def get_intra_reward(self, end_option, next_state, current_option, train_episode):
         """
         returns a reward based on the maximum value of the next_state over all options.
         :param end_option: if the option ended or not
         :param next_state: the next lower level state
+        :param current_option: the current option.
         :return: an integer corresponding to the value of the last action:
         - if end_option is False : 0
-        - if end_option is True : maximum value over all options of this state
+        - if end_option is True : maximum value over all options except the current option of this state
         """
-        if not end_option:
+        if not (end_option and train_episode and issubclass(type(current_option), OptionAbstract)):
             return 0
 
         else:
-            return 0  # todo
+            intra_rewards = []
+            for option in self.option_list:
+                if option.index != current_option.index:
+                    intra_rewards.append(option.get_value(next_state))
+
+            if intra_rewards:
+                return max(intra_rewards)
+            else:
+                return 0
 
     def act(self, o_r_d_i, train_episode=None):
         """

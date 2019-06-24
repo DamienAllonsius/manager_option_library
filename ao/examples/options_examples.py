@@ -1,5 +1,6 @@
 from ao.options.options import OptionQLearning
 from ao.examples.policy_examples_option import QArray
+import numpy as np
 
 
 class OptionQArray(OptionQLearning):
@@ -42,3 +43,10 @@ class OptionQArray(OptionQLearning):
 
     def get_policy(self):
         return QArray(action_space=self.action_space, parameters=self.parameters)
+
+    def get_value(self, state):
+        n = np.where(np.array(self.policy.state_list) == state)[0]
+        if n:
+            return int(n)
+        else:
+            return 0
