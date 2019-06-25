@@ -264,6 +264,7 @@ class Tree:
         """
         probability_leaves, leaves = Tree._get_probability_leaves(self.current_node)
         selected_leaf = leaves[sample_pmf(probability_leaves)]
+        # selected_leaf = np.randome.choice(leaves, 1, p=probability_leaves)
         return Tree._get_child_index(self.current_node, selected_leaf)
 
     def get_max_width(self):

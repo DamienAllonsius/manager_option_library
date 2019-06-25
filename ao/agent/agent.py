@@ -242,7 +242,7 @@ class AbstractAgentOption(AbstractAgent):
             self._update_policy(o_r_d_i, option.index, train_episode)
 
             # add a new option if necessary
-            if self.policy.max_number_successors() > len(self):
+            if self.policy.get_max_number_successors() > len(self):
                 self.option_list.append(self.get_option())
 
     def _update_policy(self, o_r_d_i, option_index, train_episode):

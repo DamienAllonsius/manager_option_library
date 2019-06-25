@@ -46,7 +46,7 @@ class PolicyAbstractAgent(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def max_number_successors(self):
+    def get_max_number_successors(self):
         """
         Get the maximal number of successor states over all states.
         :return: an integer between 0 and the number of states

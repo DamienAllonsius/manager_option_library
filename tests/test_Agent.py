@@ -35,7 +35,7 @@ class AgentMontezumaTest(unittest.TestCase):
 
         self.agent.policy = self.q
         self.agent.option_list = list()
-        for k in range(self.q.max_number_successors()):
+        for k in range(self.q.get_max_number_successors()):
             self.agent.option_list.append(self.agent.get_option())
 
     def test_act(self):
@@ -86,7 +86,7 @@ class AgentMontezumaTest(unittest.TestCase):
             self.assertEqual(self.agent.policy.get_current_state(), ordi[0]["agent"])
 
     def test_update_agent(self):
-        n = self.agent.policy.max_number_successors()
+        n = self.agent.policy.get_max_number_successors()
         option_index = 1
         total_reward = self.agent.compute_total_reward(self.o_r_d_i1, self.agent.option_list[option_index], None)
         self.agent.policy._update_states("state 0")

@@ -366,9 +366,9 @@ class QGraphTest(unittest.TestCase):
         self.assertEqual(randomq3, {1, 3})
 
     def test_max_successors(self):
-        self.assertEqual(self.q.max_number_successors(), 2)
-        self.assertEqual(self.q2.max_number_successors(), 3)
-        self.assertEqual(self.q.max_number_successors(), 2)
+        self.assertEqual(self.q.get_max_number_successors(), 2)
+        self.assertEqual(self.q2.get_max_number_successors(), 3)
+        self.assertEqual(self.q.get_max_number_successors(), 2)
 
     def test_get_current_state(self):
         self.assertEqual(self.q.get_current_state(), "state 5")
