@@ -1,5 +1,6 @@
 import numpy as np
 from abc import ABCMeta, abstractmethod
+from ao.utils.miscellaneous import obs_equal
 
 
 class OptionExploreAbstract(metaclass=ABCMeta):
@@ -29,10 +30,7 @@ class OptionExploreAbstract(metaclass=ABCMeta):
         :param new_state:
         :return: True if the new_state is different from the initial state
         """
-        if type(new_state) == "int":
-            return new_state != self.initial_state
-        elif type(new_state).__name__ == "ndarray":
-            return not (new_state == self.initial_state).all()
+        return not obs_equal(self.initial_state, new_state)
 
     @abstractmethod
     def update_option(self, *args):

@@ -1,5 +1,6 @@
 from collections import defaultdict
-from ao.utils.utils import *
+from ao.utils.miscellaneous import *
+from ao.utils.sample import sample_pmf
 
 
 class Node(object):
@@ -25,10 +26,7 @@ class Node(object):
         self.children = list()
 
     def __eq__(self, other):
-        if type(self.data) == "int":
-            return self.data == other.data
-        elif type(self.data).__name__ == "ndarray":
-            return np.array_equal(self.data, other.data)
+        return obs_equal(self.data, other.data)
 
     def __repr__(self):
         return "data: " + str(self.data)
@@ -187,13 +185,13 @@ class Tree:
         """
         # to improve performances: first check the children
         for node in self.current_node.children:
-            if np.array_equal(node.data, state):
+            if obs_equal(node.data, state):
                 self.current_node = node
                 return True
 
         # then check all nodes
         for node in self.root.breadth_first():
-            if np.array_equal(node.data, state):
+            if obs_equal(node.data, state):
                 self.current_node = node
                 return True
 

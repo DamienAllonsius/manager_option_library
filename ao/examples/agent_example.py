@@ -7,8 +7,8 @@ from ao.agent.agent import AbstractAgent
 from tqdm import tqdm
 import numpy as np
 from ao.examples.policy_examples_option import QArray
-from ao.utils.utils import SaveResults
-from ao.utils.utils import ShowRenderSwitch
+from ao.utils.save_results import SaveResults
+from ao.utils.show_render import ShowRenderSwitch
 from abc import abstractmethod
 
 
@@ -151,7 +151,7 @@ class PlainQLearning(AbstractAgent):
             return self.policy.get_random_action()
 
         else:
-            return self.policy.find_best_action(self.current_state)
+            return self.policy.find_best_action(train_episode)
 
     def update_agent(self, o_r_d_i, action, train_episode):
         # update the policy

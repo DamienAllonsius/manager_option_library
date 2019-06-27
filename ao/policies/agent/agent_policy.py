@@ -24,12 +24,12 @@ class PolicyAbstractAgent(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def find_best_action(self, state):
+    def find_best_action(self, train_episode=None):
         """
         Find the best action for the parameter state. It returns two elements: how to go and where to go.
         - how to go: the index of the option to activate at this state
         - where to go: the terminal target state of the option
-        :param state:
+        :param train_episode:
         :return: best_option_index, terminal_state
         if both are None then this means that the exploration has to be performed
         """

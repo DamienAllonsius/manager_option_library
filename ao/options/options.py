@@ -7,6 +7,7 @@ penalty_option_action
 """
 from abc import ABCMeta, abstractmethod
 from ao.policies.option.option_policy import PolicyAbstractOption
+from ao.utils.miscellaneous import obs_equal
 
 
 class OptionAbstract(metaclass=ABCMeta):
@@ -49,7 +50,7 @@ class OptionAbstract(metaclass=ABCMeta):
         :param new_state:
         :return: True if the new_state is different from the initial state
         """
-        end_option = (new_state != self.initial_state)
+        end_option = not obs_equal(new_state, self.initial_state)
         if end_option:
             self.activated = False
 

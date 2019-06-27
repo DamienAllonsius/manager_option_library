@@ -1,7 +1,7 @@
 from ao.structures.tree import Node, Tree
 import numpy as np
 import unittest
-from ao.utils.utils import red, white, yellow, tab, green
+from ao.utils.miscellaneous import red, white, yellow, tab, green
 
 
 class TreeTest(unittest.TestCase):

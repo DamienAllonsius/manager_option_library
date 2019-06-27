@@ -1,5 +1,6 @@
 import numpy as np
 from ao.policies.agent.agent_policy import PolicyAbstractAgent
+from ao.utils.miscellaneous import obs_equal
 
 
 class QGraph(PolicyAbstractAgent):
@@ -43,7 +44,7 @@ class QGraph(PolicyAbstractAgent):
         :param state:
         :return: void
         """
-        if state != self.get_current_state():
+        if not obs_equal(state, self.get_current_state()):
             self._update_states(state)
 
     def _update_states(self, state):

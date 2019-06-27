@@ -5,13 +5,14 @@ This library can be connected to a gym environment or any kind of environment as
 """
 import numpy as np
 
-from ao.utils.utils import SaveResults
 from abc import ABCMeta, abstractmethod
 from tqdm import tqdm
 from ao.policies.agent.agent_policy import PolicyAbstractAgent
 from ao.options.options import OptionAbstract
 from ao.options.options_explore import OptionExploreAbstract
-from ao.utils.utils import ShowRender
+from ao.utils.save_results import SaveResults
+from ao.utils.show_render import ShowRender
+from ao.utils.miscellaneous import obs_equal
 from collections import deque
 import matplotlib.pyplot as plt
 
@@ -71,7 +72,7 @@ class AbstractAgent(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
-class   AbstractAgentOption(AbstractAgent):
+class AbstractAgentOption(AbstractAgent):
     """
     Abstract Agent class with the Options framework
     """
@@ -170,31 +171,6 @@ class   AbstractAgentOption(AbstractAgent):
                 current_option = None
 
             done = self.check_end_agent(o_r_d_i, current_option, train_episode)
-
-    def get_intra_reward(self, end_option, next_state, current_option, train_episode):
-        """
-        returns a reward based on the maximum value of the next_state over all options.
-        :param end_option: if the option ended or not
-        :param next_state: the next lower level state
-        :param current_option: the current option.
-        :param train_episode:
-        :return: an integer corresponding to the value of the last action:
-        - if end_option is False : 0
-        - if end_option is True : maximum value over all options except the current option of this state
-        """
-        if not (end_option and train_episode and issubclass(type(current_option), OptionAbstract)):
-            return 0
-
-        else:
-            intra_rewards = []
-            for option in self.option_list:
-                if option.index != current_option.index:
-                    intra_rewards.append(option.get_value(next_state))
-
-            if intra_rewards:
-                return max(intra_rewards)
-            else:
-                return 0
 
     def act(self, o_r_d_i, train_episode=None):
         """
@@ -306,16 +282,16 @@ class   AbstractAgentOption(AbstractAgent):
         self.save_results.write_message("Experiment complete.")
 
     def write_success_rate_transitions(self, o_r_d_i, current_option):
-        if current_option.terminal_state == o_r_d_i[0]["agent"]:
+        if obs_equal(current_option.terminal_state, o_r_d_i[0]["agent"]):
             self.success.append(1)
-        if current_option.terminal_state != o_r_d_i[0]["agent"]:
+        if not obs_equal(current_option.terminal_state, o_r_d_i[0]["agent"]):
             self.success.append(0)
         self.save_results.write_message_in_a_file("success_rate_transition", str(sum(self.success)) + "\n")
 
     def print_success_rate_transitions(self, o_r_d_i, current_option):
-        if current_option.terminal_state == o_r_d_i[0]["agent"]:
+        if obs_equal(current_option.terminal_state, o_r_d_i[0]["agent"]):
             self.success.append(1)
-        if current_option.terminal_state != o_r_d_i[0]["agent"]:
+        if not obs_equal(current_option.terminal_state, o_r_d_i[0]["agent"]):
             self.success.append(0)
         print(str(sum(self.success)) + "%")
 
@@ -328,6 +304,13 @@ class   AbstractAgentOption(AbstractAgent):
         plt.title("success rate of options' transitions")
         plt.draw()
         plt.pause(.001)
+
+    def get_intra_reward(self, end_option, next_state, current_option, train_episode):
+        """
+        returns a reward based on the maximum value of the next_state over all options
+        (maybe one should select some options instead of using all options).
+        """
+        return 0
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):
