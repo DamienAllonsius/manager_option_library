@@ -43,7 +43,8 @@ class QGraph(PolicyAbstractAgent):
         :param state:
         :return: void
         """
-        self._update_states(state)
+        if state != self.get_current_state():
+            self._update_states(state)
 
     def _update_states(self, state):
         """
@@ -61,7 +62,6 @@ class QGraph(PolicyAbstractAgent):
             self.max_states = 1
 
         else:
-            assert (state != self.get_current_state())
             # Add the new state in the list of states and in the graph.
             # Get the index i of this state
             try:

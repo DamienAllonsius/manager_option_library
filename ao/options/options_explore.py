@@ -29,7 +29,10 @@ class OptionExploreAbstract(metaclass=ABCMeta):
         :param new_state:
         :return: True if the new_state is different from the initial state
         """
-        return new_state != self.initial_state
+        if type(new_state) == "int":
+            return new_state != self.initial_state
+        elif type(new_state).__name__ == "ndarray":
+            return not (new_state == self.initial_state).all()
 
     @abstractmethod
     def update_option(self, *args):

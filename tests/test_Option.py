@@ -34,7 +34,7 @@ class OptionTest(unittest.TestCase):
 
     def test_update_option(self):
         self.option1.reset("state 1", "state option 1", "terminal state")
-        self.option1.update_option(self.o_r_d_i1, 0, train_episode=None)
+        self.option1.update_option(self.o_r_d_i1, 0, 0, False, train_episode=None)
         self.assertEqual(self.option1.score, self.o_r_d_i1[1])
 
         # test 2
@@ -43,7 +43,7 @@ class OptionTest(unittest.TestCase):
         current_state_idx = self.option1.policy.current_state_index
         values = list(self.option1.policy.values[current_state_idx].copy())
 
-        self.option1.update_option(self.o_r_d_i1, action, train_episode=1)
+        self.option1.update_option(self.o_r_d_i1, 0, action, False, train_episode=1)
         total_reward = self.o_r_d_i1[1]
 
         best_value = np.max(self.option1.policy.values[self.option1.policy.current_state_index])
@@ -63,12 +63,14 @@ class OptionTest(unittest.TestCase):
         # test 3
 
         action = 1
+        intra_reward = 17
         self.option1.reset("state 0", "state option 0", "terminal state")
         current_state_idx = self.option1.policy.current_state_index
         values = list(self.option1.policy.values[current_state_idx].copy())
 
-        self.option1.update_option(self.o_r_d_i1, action, train_episode=1)
+        self.option1.update_option(self.o_r_d_i1, intra_reward, action, True, train_episode=1)
         total_reward = self.o_r_d_i1[1]
+        total_reward += intra_reward
         total_reward += self.parameters["penalty_end_option"]
 
         best_value = 0
@@ -107,10 +109,10 @@ class OptionTest(unittest.TestCase):
         action1 = 0
         action2 = 1
         total_reward = list()
-        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i1, action1, end_option=True))
-        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i1, action1, end_option=False))
-        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i2, action2, end_option=True))
-        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i3, action2, end_option=True))
+        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i1, 0, action1, end_option=True))
+        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i1, 0, action1, end_option=False))
+        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i2, 0, action2, end_option=True))
+        total_reward.append(self.option1.compute_total_reward(self.o_r_d_i3, 0, action2, end_option=True))
 
         total_reward_expected = list()
         total_reward_expected.append(self.o_r_d_i1[1] +

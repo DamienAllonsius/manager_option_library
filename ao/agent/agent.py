@@ -71,7 +71,7 @@ class AbstractAgent(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
-class AbstractAgentOption(AbstractAgent):
+class   AbstractAgentOption(AbstractAgent):
     """
     Abstract Agent class with the Options framework
     """
@@ -177,6 +177,7 @@ class AbstractAgentOption(AbstractAgent):
         :param end_option: if the option ended or not
         :param next_state: the next lower level state
         :param current_option: the current option.
+        :param train_episode:
         :return: an integer corresponding to the value of the last action:
         - if end_option is False : 0
         - if end_option is True : maximum value over all options except the current option of this state
@@ -233,7 +234,6 @@ class AbstractAgentOption(AbstractAgent):
         :param train_episode: the number of the current training episode
         :return : void
         """
-
         if train_episode is None:  # in simulate mode
             # compute total score
             self.score = self.compute_total_score(o_r_d_i, option.index, train_episode)
@@ -259,7 +259,7 @@ class AbstractAgentOption(AbstractAgent):
             total_reward = self.compute_total_reward(o_r_d_i, option_index, train_episode)
 
         # then, update the policy
-        self.policy.update_policy(o_r_d_i[0]["agent"], total_reward, option_index)
+        self.policy.update_policy(o_r_d_i[0]["agent"], total_reward, option_index, train_episode)
 
     def train_agent(self, environment, seed=0):
         """

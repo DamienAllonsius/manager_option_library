@@ -85,11 +85,11 @@ class NodeTest(unittest.TestCase):
                 self.assertFalse(node.is_leaf())
 
     def test_get_values(self):
-        values_0 = self.node_0.get_values()
-        values_1 = self.node_1.get_values()
-        values_2 = self.node_2.get_values()
-        values_3 = self.node_3.get_values()
-        values_7 = self.node_7.get_values()
+        values_0 = self.node_0.get_children_values()
+        values_1 = self.node_1.get_children_values()
+        values_2 = self.node_2.get_children_values()
+        values_3 = self.node_3.get_children_values()
+        values_7 = self.node_7.get_children_values()
 
         self.assertEqual(values_0, [1, 10, 11])
         self.assertEqual(values_1, [100, 101])

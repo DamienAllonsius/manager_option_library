@@ -1,6 +1,5 @@
 from collections import defaultdict
 from ao.utils.utils import *
-import numpy as np
 
 
 class Node(object):
@@ -26,7 +25,10 @@ class Node(object):
         self.children = list()
 
     def __eq__(self, other):
-        return self.data == other.data
+        if type(self.data) == "int":
+            return self.data == other.data
+        elif type(self.data).__name__ == "ndarray":
+            return np.array_equal(self.data, other.data)
 
     def __repr__(self):
         return "data: " + str(self.data)
@@ -67,33 +69,21 @@ class Node(object):
         return self.parent is None
 
     def is_leaf(self):
-        return len(self.children) == 0
+        """
+        :return: True if and only if self.children == [].
+        """
+        return not self.children
 
     def breadth_first(self):
         current_nodes = [self]
-        while len(current_nodes) > 0:
+        while current_nodes:
             children = []
             for node in current_nodes:
                 yield node
                 children.extend(node.children)
             current_nodes = children
 
-    def make_root(self):
-        if not self.is_root():
-            self.parent.children.remove(self)  # just to be consistent
-            self.parent = None
-            old_depth = self.depth
-            for node in self.breadth_first():
-                node.depth -= old_depth
-
-    def find_root(self):
-        if self.is_root():
-            return self
-
-        else:
-            return self.parent.find_root()
-
-    def get_values(self):
+    def get_children_values(self):
         return [child.value for child in self.children]
 
 
@@ -101,14 +91,23 @@ class Tree:
     """
     Tests: OK
     Although a Node is a tree by itself, this class provides more iterators and
-    quick access to the different depths of
-    the tree, and keeps track of the root node
+    quick access to the different depths of the tree, and keeps track of the root node
+
+    characteristics of the tree are: max_width, nodes and depth
     """
     def __init__(self, root_data):
         self.root = Node(root_data)
         self.current_node = self.root
-        self.max_width = 0
-        self.max_depth = 0
+
+        # set the novelty_table
+        self.shape = root_data.shape[:2]
+        self.novelty_table = np.empty(self.shape, dtype=set)
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                self.novelty_table[i, j] = {tuple(root_data[i, j])}
+
+        # characteristics of the tree
+        self.max_width = 1
         self.nodes = list()
         self.depth = defaultdict(list)
 
@@ -168,46 +167,85 @@ class Tree:
             s += "".join([tab] * node.depth + ["|", str(node.data) + ". depth : " + str(node.depth), '\n'])
         return s + white
 
-    def new_root(self, node: Node):
-        node.make_root()
-        self.root = node
+    def reset(self):
         self.current_node = self.root
-        self.max_depth = 0
-        self.nodes = list()
-        self.depth = defaultdict(list)
 
-        for n in self.root.breadth_first():
-            # iterate through children nodes and add them to the depth list
-            self._update(n)
+    def get_max_width(self):
+        return self.max_width
 
-    def _update(self, node: Node):
+    def get_current_state(self):
+        return self.current_node.data
+
+    def move_to_child_node_from_index(self, index):
+        self.current_node = self.current_node.children[index]
+
+    def move_if_node_with_state(self, state):
         """
-        updates the depth, the nodes list, the max_depth, max_width and the current node
+        update self.current_state if there exists a node with state
+        :param state:
+        :return True iff node with node.data == state is found
+        """
+        # to improve performances: first check the children
+        for node in self.current_node.children:
+            if np.array_equal(node.data, state):
+                self.current_node = node
+                return True
+
+        # then check all nodes
+        for node in self.root.breadth_first():
+            if np.array_equal(node.data, state):
+                self.current_node = node
+                return True
+
+        # if not found, return False
+        return False
+
+    def add_node(self, data):
+        """
+        Add the tree under the current_node if it is not novel (IW). Then, updates the tree characteristics.
+        :param data: the data contained in the node that we have to add to the tree.
+        :return the novelty
+        """
+        novel = self.update_novelty_table(data)
+        if novel:
+            node = Node(data, self.current_node)
+            self._update_characteristics(node)
+            self.current_node = node
+
+        return novel
+
+    def _update_characteristics(self, node: Node):
+        """
+        updates the depth, the nodes list, max_width and the current node
         :param node:
         """
-        self.current_node = node
         self.depth[node.depth].append(node)
         self.nodes.append(node)
-
-        # update max_depth
-        if node.depth > self.max_depth:
-            self.max_depth = node.depth
 
         # update max_width
         if node.parent is not None and len(node.parent.children) > self.max_width:
             self.max_width += 1
 
-    def add_node(self, parent_node: Node, node: Node):
+    def update_novelty_table(self, state):
         """
-        add the tree under the parent_node if it does not already exist. Then, updates the tree parameters.
-        :param parent_node: the node from where you attach the input node
-        :param node: the node to add to the tree
-        :return the new node
+        todo make tests
+        updates the novelty table by including the elements of state in the novelty table if needed.
+        :param state:
+        :return: True iff the state is novel
         """
-        node.parent = parent_node
-        node.depth = parent_node.depth + 1
-        parent_node.children.append(node)
-        self._update(node)
+        novel = False
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+
+                t = tuple(state[i, j])
+                if t not in self.novelty_table[i, j]:
+                    novel = True
+                    self.novelty_table[i, j].add(t)
+
+        return novel
+
+    def get_children_values(self):
+        return self.current_node.get_children_values()
 
     @staticmethod
     def _get_leaves(node: Node):
@@ -217,41 +255,45 @@ class Tree:
         :return the leaves of the given node input.
         """
         leaves = []
-        for child in node.depth_first():
-            if child.is_leaf() and (not child.is_root()):
+        iterator = node.depth_first()
+
+        # remove the first element if it is the root
+        if node.is_root():
+            next(iterator)
+
+        for child in iterator:
+            if child.is_leaf():
                 leaves.append(child)
 
         return leaves
 
-    @staticmethod
-    def _get_child_index(node: Node, leaf: Node):
+    def _get_child_index_to_leaf(self, leaf: Node):
         """
-        This function gets the child of input node which is a parent of input leaf.
-        :param node:
+        This function gets a child index of current_node.
+        This child is a parent of leaf.
         :param leaf:
-        :return: an index of list node.children
+        :return: an integer between 0 and len(self.current_node.children) - 1
         """
-        while leaf.parent != node:
+        while leaf.parent != self.current_node:
             leaf = leaf.parent
 
         return leaf.parent.children.index(leaf)
 
-    @staticmethod
-    def _get_probability_leaves(node):
+    def _get_probability_leaves(self):
         """
-        for all leaves from node, computes the probability of selecting a leaf.
+        todo : possible to put another distribution
+        for all leaves from current_node, computes the probability of selecting a leaf.
         These probabilities are proportional to the depth of the leaf (computed from input node)
-        :param node:
         :return: the probabilities of selecting a leaf, all the leaves of the tree which has input node as a parent
         """
-        assert not(node.is_leaf())
+        assert not(self.current_node.is_leaf())
 
-        leaves = Tree._get_leaves(node)
+        leaves = Tree._get_leaves(self.current_node)
         probability_leaves = np.zeros(len(leaves))
         idx = -1
         for leaf in leaves:
             idx += 1
-            probability_leaves[idx] = (leaf.depth - node.depth)
+            probability_leaves[idx] = (leaf.depth - self.current_node.depth)
 
         probability_leaves /= np.sum(probability_leaves)
 
@@ -262,49 +304,9 @@ class Tree:
         gives the index of a child, selected according to its probability, computed with _get_probability_leaves
         :return: an index from list self.children
         """
-        probability_leaves, leaves = Tree._get_probability_leaves(self.current_node)
+        probability_leaves, leaves = self._get_probability_leaves()
         selected_leaf = leaves[sample_pmf(probability_leaves)]
-        # selected_leaf = np.randome.choice(leaves, 1, p=probability_leaves)
-        return Tree._get_child_index(self.current_node, selected_leaf)
+        return self._get_child_index_to_leaf(selected_leaf)
 
-    def get_max_width(self):
-        return self.max_width
-
-    def get_current_node(self):
-        return self.current_node
-
-    def set_current_node(self, node: Node):
-        self.current_node = node
-
-    def get_values_children(self):
-        return self.current_node.get_values()
-
-    def get_node_from_state(self, state):
-        """
-        :param state:
-        :return: the corresponding node with node.data == state
-        :exception if the state does not exist
-        """
-        for node in self.root.depth_first():
-            if node.data == state:
-                return node
-
-        raise ValueError("state does not exist in the tree")
-
-    def get_child_node(self, feature):
-        """
-        :param feature: the node feature we are looking for (can be node.data or the index of the child)
-        :return: a child of self.current_node with child.data == state
-        """
-        if type(feature) == str:
-            for child in self.current_node.children:
-                if child.data == feature:
-                    return child
-
-            raise ValueError("None of my children have this state")
-
-        elif type(feature) == int:
-            return self.current_node.children[feature]
-
-        else:
-            raise Exception("feature type is not recognized")
+    def get_child_data_from_index(self, child_index):
+        return self.current_node.children[child_index].data

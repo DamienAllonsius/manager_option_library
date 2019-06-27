@@ -70,29 +70,29 @@ class TreeTest(unittest.TestCase):
         self.tree.root.data = "toto"
         self.assertNotEqual(tree, self.tree)
 
-    def test_new_root(self):
-        self.tree.new_root(self.node_3)
-
-        tree = Tree(0)
-        tree.root = self.node_3
-        tree.nodes = [self.node_3, self.node_6]
-        tree.depth[0].append(self.node_3)
-        tree.depth[1].append(self.node_6)
-        tree.max_depth = 1
-
-        self.assertEqual(self.tree.root, tree.root)
-        self.assertEqual(self.tree.nodes, tree.nodes)
-        self.assertEqual(self.tree.depth, tree.depth)
-        self.assertEqual(self.tree.max_depth, tree.max_depth)
+    # def test_new_root(self):
+    #     self.tree.new_root(self.node_3)
+    #
+    #     tree = Tree(0)
+    #     tree.root = self.node_3
+    #     tree.nodes = [self.node_3, self.node_6]
+    #     tree.depth[0].append(self.node_3)
+    #     tree.depth[1].append(self.node_6)
+    #     tree.max_depth = 1
+    #
+    #     self.assertEqual(self.tree.root, tree.root)
+    #     self.assertEqual(self.tree.nodes, tree.nodes)
+    #     self.assertEqual(self.tree.depth, tree.depth)
+    #     self.assertEqual(self.tree.get_max_depth(), tree.max_depth)
 
     def test_update(self):
         depth = 3
         self.node_8.depth = depth
-        self.tree._update(self.node_8)
+        self.tree._update_characteristics(self.node_8)
         self.assertEqual(self.tree.depth[depth], [self.node_7, self.node_8])
-        self.assertEqual(self.tree.current_node, self.node_8)
+        self.assertEqual(self.tree.current_node, self.node_7)
         self.assertEqual(self.tree.nodes[-1], self.node_8)
-        self.assertEqual(self.tree.max_depth, self.node_8.depth)
+        self.assertEqual(self.tree.get_max_depth(), self.node_8.depth)
 
     def test_add_node(self):
         self.tree.add_node(parent_node=self.node_6, node=self.node_8)
@@ -162,7 +162,7 @@ class TreeTest(unittest.TestCase):
     def test_get_random_child_index(self):
         from collections import defaultdict
         index = defaultdict(int)
-        self.tree.set_current_node(self.tree.root)
+        self.tree.current_node = self.tree.root
         n = 100
         for k in range(n):
             index[self.tree.get_random_child_index()] += 1
