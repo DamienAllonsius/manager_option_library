@@ -91,7 +91,7 @@ class AbstractAgentOption(AbstractAgent):
 
         self.policy = self.get_policy()
         self.explore_option = self.get_explore_option()
-
+        self.show_environment = parameters["show_environment"]
         self.show_render = None
 
         self.save_results = SaveResults(self.parameters)
@@ -140,7 +140,8 @@ class AbstractAgentOption(AbstractAgent):
         done = False
         current_option = None
         # Render the current state
-        self.show_render.display()
+        if self.show_environment:
+            self.show_render.display()
 
         while not done:
             # If no option is activated then choose one
@@ -152,8 +153,8 @@ class AbstractAgentOption(AbstractAgent):
 
             # make an action and display the state space
             o_r_d_i = env.step(action)
-
-            self.show_render.display()
+            if self.show_environment:
+                self.show_render.display()
 
             # check if the option ended
             end_option = current_option.check_end_option(o_r_d_i[0]["agent"])
@@ -250,7 +251,8 @@ class AbstractAgentOption(AbstractAgent):
         self.save_results.write_setting()
 
         # prepare to display the states
-        self.show_render = ShowRender(environment)
+        if self.show_environment:
+            self.show_render = ShowRender(environment)
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
@@ -272,7 +274,8 @@ class AbstractAgentOption(AbstractAgent):
         self.save_results.set_file_results_name(seed)
 
         # prepare to display the states
-        self.show_render = ShowRender(environment)
+        if self.show_environment:
+            self.show_render = ShowRender(environment)
 
         # simulate
         self._train_simulate_agent(environment)
