@@ -32,10 +32,10 @@ class Node(object):
         return "data: " + str(self.data)
 
     def __str__(self):
-        s = "\n" + "node " + str(self.data) + " at depth " + str(self.depth) + "\n"
+        s = "\n" + "node " + str(hash(self.data)) + " at depth " + str(self.depth) + "\n"
         s += "value: " + str(self.value) + "\n"
         if self.parent is not None:
-            s += "parent: " + str(self.parent.data) + "\n"
+            s += "parent: " + str(hash(self.parent.data)) + "\n"
 
         else:
             s += "no parent\n"
@@ -43,7 +43,7 @@ class Node(object):
         if self.children != list():
             s += "children: " + "["
             for child in self.children:
-                s += str(child.data) + ", "
+                s += str(hash(child.data)) + ", "
 
             s = s[:-2]
             s += "]" + "\n"
@@ -140,7 +140,7 @@ class Tree:
             else:
                 s += green
 
-            s += "".join([tab] * node.depth + ["|", str(node.data) + ". depth : " + str(node.depth), '\n'])
+            s += "".join([tab] * node.depth + ["|", str(id(node.data)) + ". depth : " + str(node.depth), '\n'])
         return s + white
 
     def tree_to_string(self, next_node):

@@ -84,7 +84,8 @@ class PlainQLearning(AbstractAgent):
         done = False
 
         # render the image
-        self.show_render.display()
+        if self.parameters["display_environment"]:
+            self.show_render.display()
 
         while not done:
             # choose an action
@@ -96,8 +97,9 @@ class PlainQLearning(AbstractAgent):
             # update the agent
             self.update_agent(o_r_d_i, action, train_episode)
 
-            # display the observation
-            self.show_render.display()
+            # display the observation if needed
+            if self.parameters["display_environment"]:
+                self.show_render.display()
 
             # update variable done
             done = self.check_end_agent(o_r_d_i)
@@ -112,7 +114,8 @@ class PlainQLearning(AbstractAgent):
         environment.seed(seed)
 
         # prepare to display the states
-        self.show_render = ShowRenderSwitch(environment)
+        if self.parameters["display_environment"]:
+            self.show_render = ShowRenderSwitch(environment)
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
