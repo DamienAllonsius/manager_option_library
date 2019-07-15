@@ -91,7 +91,6 @@ class AbstractAgentOption(AbstractAgent):
 
         self.policy = self.get_policy()
         self.explore_option = self.get_explore_option()
-
         self.show_render = None
 
         self.save_results = SaveResults(self.parameters)
