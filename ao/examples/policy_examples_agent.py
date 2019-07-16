@@ -44,7 +44,7 @@ class QGraph(PolicyAbstractAgent):
         :param state:
         :return: void
         """
-        if not obs_equal(state, self.get_current_state()):
+        if self.get_current_state() is None or not obs_equal(state, self.get_current_state()):
             self._update_states(state)
 
     def _update_states(self, state):

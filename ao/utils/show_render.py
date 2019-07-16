@@ -67,3 +67,17 @@ class ShowRenderSwitch(object):
 
     def key_release(self, key, mod):
         pass
+
+
+class ShowRenderMiniGrid(object):
+    def __init__(self, env):
+        self.env = env
+
+    def display(self):
+        self.env.render()
+
+    def key_press(self, key, mod):
+        print("Not implemented yet :D")
+
+    def key_release(self, key, mod):
+        pass

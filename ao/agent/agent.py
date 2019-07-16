@@ -251,7 +251,7 @@ class AbstractAgentOption(AbstractAgent):
 
         # prepare to display the states
         if self.parameters["display_environment"]:
-            self.show_render = ShowRender(environment)
+            self.show_render = self.get_show_render_train(environment)
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
@@ -274,7 +274,7 @@ class AbstractAgentOption(AbstractAgent):
 
         # prepare to display the states if needed
         if self.parameters["display_environment"]:
-            self.show_render = ShowRender(environment)
+            self.show_render = self.get_show_render_simulate(environment)
 
         # simulate
         self._train_simulate_agent(environment)
@@ -313,6 +313,12 @@ class AbstractAgentOption(AbstractAgent):
         (maybe one should select some options instead of using all options).
         """
         return 0
+
+    def get_show_render_train(self, env):
+        return ShowRender(env)
+
+    def get_show_render_simulate(self, env):
+        return ShowRender(env)
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):
