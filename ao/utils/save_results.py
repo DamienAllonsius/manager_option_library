@@ -18,7 +18,6 @@ class SaveResults(object):
         dir_name += time.asctime(time.localtime(time.time())).replace(" ", "_")
         os.mkdir(dir_name)
         print("results are stored in directory: " + str(dir_name))
-        time.sleep(1)
 
         return dir_name
 

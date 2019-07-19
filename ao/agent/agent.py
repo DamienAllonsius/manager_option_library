@@ -132,15 +132,14 @@ class AbstractAgentOption(AbstractAgent):
         :return:
         """
         # The initial observation
-        obs = env.reset()
-        o_r_d_i = [obs]
+        o_r_d_i = [env.reset()]
         # Reset all the parameters
         self.reset(o_r_d_i[0]["agent"])
         done = False
         current_option = None
         # Render the current state
         if self.parameters["display_environment"]:
-            self.show_render.display()
+            self.show_render.render(o_r_d_i[0])
 
         while not done:
             # If no option is activated then choose one
@@ -153,7 +152,7 @@ class AbstractAgentOption(AbstractAgent):
             # make an action and display the state space
             o_r_d_i = env.step(action)
             if self.parameters["display_environment"]:
-                self.show_render.display()
+                self.show_render.render(o_r_d_i[0])
 
             # check if the option ended
             end_option = current_option.check_end_option(o_r_d_i[0]["agent"])
@@ -251,13 +250,15 @@ class AbstractAgentOption(AbstractAgent):
 
         # prepare to display the states
         if self.parameters["display_environment"]:
-            self.show_render = self.get_show_render_train(environment)
+            self.show_render = AbstractAgentOption.get_show_render_train()
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)
 
             if not t % 200:
                 self.plot_success_rate_transitions()
+
+        self.show_render.close()
 
     def simulate_agent(self, environment, seed=0):
         """
@@ -274,7 +275,7 @@ class AbstractAgentOption(AbstractAgent):
 
         # prepare to display the states if needed
         if self.parameters["display_environment"]:
-            self.show_render = self.get_show_render_simulate(environment)
+            self.show_render = AbstractAgentOption.get_show_render_simulate()
 
         # simulate
         self._train_simulate_agent(environment)
@@ -282,6 +283,8 @@ class AbstractAgentOption(AbstractAgent):
         # write the results and write that the experiment went well
         self.save_results.write_reward(self.parameters["number_episodes"], self.score)
         self.save_results.write_message("Experiment complete.")
+
+        self.show_render.close()
 
     def write_success_rate_transitions(self, o_r_d_i, current_option):
         if obs_equal(current_option.terminal_state, o_r_d_i[0]["agent"]):
@@ -314,11 +317,13 @@ class AbstractAgentOption(AbstractAgent):
         """
         return 0
 
-    def get_show_render_train(self, env):
-        return ShowRender(env)
+    @staticmethod
+    def get_show_render_train():
+        return ShowRender()
 
-    def get_show_render_simulate(self, env):
-        return ShowRender(env)
+    @staticmethod
+    def get_show_render_simulate():
+        return ShowRender()
 
     @abstractmethod
     def get_option_states(self, *args, **kwargs):

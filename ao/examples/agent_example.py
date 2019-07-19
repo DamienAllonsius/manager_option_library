@@ -8,7 +8,7 @@ from tqdm import tqdm
 import numpy as np
 from ao.examples.policy_examples_option import QArray
 from ao.utils.save_results import SaveResults
-from ao.utils.show_render import ShowRenderSwitch
+from ao.utils.show_render import ShowRender
 from abc import abstractmethod
 
 
@@ -115,7 +115,7 @@ class PlainQLearning(AbstractAgent):
 
         # prepare to display the states
         if self.parameters["display_environment"]:
-            self.show_render = ShowRenderSwitch(environment)
+            self.show_render = ShowRender()
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate_agent(environment, t)

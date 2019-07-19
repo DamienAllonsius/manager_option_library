@@ -1,83 +1,87 @@
+import cv2
+from gym.envs.classic_control import rendering
+
+
 class ShowRender(object):
 
-    def __init__(self, env):
-        self.env = env
+    def __init__(self):
         self.display_learning = True
-        self.blurred_render = False
-        self.gray_scale_render = False
+
+        self.vanilla_view = True
+        self.option_view = False
         self.agent_view = False
-        self.env.render(blurred_render=self.blurred_render,
-                        gray_scale_render=self.gray_scale_render,
-                        agent_render=self.agent_view)
-        self.env.unwrapped.viewer.window.on_key_press = self.key_press
-        self.env.unwrapped.viewer.window.on_key_release = self.key_release
 
-    def display(self):
+        self.viewer = rendering.SimpleImageViewer()
+        
+    def render(self, observation):
+        """
+        :param observation: a dictionary containing the observations:
+        - obersation vanilla
+        - observation agent
+        - observation option
+        :return:
+        """
+        assert list(observation.keys()) == ["vanilla", "agent", "option"], "observation must be a dictionary with" \
+                                                                           "3 keys : vanilla, agent and option"
         if self.display_learning:
-            self.env.render(blurred_render=self.blurred_render,
-                            gray_scale_render=self.gray_scale_render,
-                            agent_render=self.agent_view)
+            if self.vanilla_view:
+                self.display(observation["vanilla"])
 
-        else:
-            self.env.unwrapped.viewer.window.dispatch_events()
+            elif self.agent_view:
+                self.display(observation["agent"])
+
+            elif self.option_view:
+                self.display(observation["option"])
+
+    def display(self, image_pixel):
+        img = cv2.resize(image_pixel, (512, 512), interpolation=cv2.INTER_NEAREST)
+        self.viewer.imshow(img)
+
+        if self.viewer.window is not None:
+            self.viewer.window.on_key_press = self.key_press
+
+    def close(self):
+        self.viewer.close()
 
     def key_press(self, key, mod):
         if key == ord("d"):
+            print("press d to display the observation")
             self.display_learning = not self.display_learning
 
-        if key == ord("b"):
-            self.blurred_render = not self.blurred_render
+        if key == ord("o"):
+            self.set_option_view()
 
-        if key == ord("g"):
-            self.gray_scale_render = not self.gray_scale_render
+        if key == ord("v"):
+            self.set_vanilla_view()
 
         if key == ord("a"):
-            self.agent_view = not self.agent_view
+            self.set_agent_view()
 
         if key == ord(" "):
-            self.agent_view = not self.agent_view
-            self.blurred_render = True
-            self.gray_scale_render = True
 
-    def key_release(self, key, mod):
-        pass
+            if self.option_view:
+                self.set_vanilla_view()
 
+            elif self.vanilla_view:
+                self.set_agent_view()
 
-class ShowRenderSwitch(object):
-    """
-    Like class ShowRender but can only switch from display to not display
-    """
+            elif self.agent_view:
+                self.set_option_view()
 
-    def __init__(self, env):
-        self.env = env
-        self.display_learning = True
-        self.env.render()
-        self.env.unwrapped.viewer.window.on_key_press = self.key_press
-        self.env.unwrapped.viewer.window.on_key_release = self.key_release
+    def set_vanilla_view(self):
+        print("original view")
+        self.vanilla_view = True
+        self.option_view = False
+        self.agent_view = False
 
-    def display(self):
-        if self.display_learning:
-            self.env.render()
-        else:
-            self.env.unwrapped.viewer.window.dispatch_events()
+    def set_option_view(self):
+        print("option's view")
+        self.vanilla_view = False
+        self.option_view = True
+        self.agent_view = False
 
-    def key_press(self, key, mod):
-        if key == ord("d"):
-            self.display_learning = not self.display_learning
-
-    def key_release(self, key, mod):
-        pass
-
-
-class ShowRenderMiniGrid(object):
-    def __init__(self, env):
-        self.env = env
-
-    def display(self):
-        self.env.render()
-
-    def key_press(self, key, mod):
-        print("Not implemented yet :D")
-
-    def key_release(self, key, mod):
-        pass
+    def set_agent_view(self):
+        print("agent's view")
+        self.vanilla_view = False
+        self.option_view = False
+        self.agent_view = True
