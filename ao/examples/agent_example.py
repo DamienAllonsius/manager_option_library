@@ -75,7 +75,7 @@ class PlainQLearning(AbstractAgent):
         self.current_state = None
         self.policy = QArray(action_space, parameters)
         self.score = 0
-        self.show_render = None
+        self.show_render = None  # useful to resize the observation
 
     def _train_simulate_agent(self, env, train_episode=None):
         # reset the parameters
@@ -85,7 +85,7 @@ class PlainQLearning(AbstractAgent):
 
         # render the image
         if self.parameters["display_environment"]:
-            self.show_render.display()
+            self.show_render.render(obs)
 
         while not done:
             # choose an action
@@ -99,7 +99,7 @@ class PlainQLearning(AbstractAgent):
 
             # display the observation if needed
             if self.parameters["display_environment"]:
-                self.show_render.display()
+                self.show_render.render(o_r_d_i[0])
 
             # update variable done
             done = self.check_end_agent(o_r_d_i)

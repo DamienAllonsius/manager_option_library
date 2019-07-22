@@ -113,12 +113,14 @@ class QGraph(PolicyAbstractAgent):
             state_index = self.state_graph[self.current_state_index][option_index]
             return option_index, self.states[state_index]
 
-    def update_policy(self, new_state, reward, action):
-        if action is None:
+    def update_policy(self, new_state, reward, action, train_episode):
+        if train_episode is None:  # simulating phase
             self._update_states(new_state)
 
-        else:
-            self.update_value(new_state, reward, action)
+        else:  # training phase
+            if action is not None:  # update only if there is a previous action
+                self.update_value(new_state, reward, action)
+
             self._update_states(new_state)
 
     def update_value(self, new_state, reward, action):

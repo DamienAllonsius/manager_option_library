@@ -21,17 +21,22 @@ class ShowRender(object):
         - observation option
         :return:
         """
-        assert list(observation.keys()) == ["vanilla", "agent", "option"], "observation must be a dictionary with" \
-                                                                           "3 keys : vanilla, agent and option"
         if self.display_learning:
-            if self.vanilla_view:
-                self.display(observation["vanilla"])
+            if type(observation).__name__ == "ndarray":
+                self.display(observation)
 
-            elif self.agent_view:
-                self.display(observation["agent"])
+            else:
+                assert list(observation.keys()) == ["vanilla", "agent", "option"], \
+                    "observation must be a dictionary with 3 keys : vanilla, agent and option"
 
-            elif self.option_view:
-                self.display(observation["option"])
+                if self.vanilla_view:
+                    self.display(observation["vanilla"])
+
+                elif self.agent_view:
+                    self.display(observation["agent"])
+
+                elif self.option_view:
+                    self.display(observation["option"])
 
     def display(self, image_pixel):
         img = cv2.resize(image_pixel, (512, 512), interpolation=cv2.INTER_NEAREST)
