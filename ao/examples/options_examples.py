@@ -35,11 +35,7 @@ class OptionQArray(OptionQLearning):
         :param train_episode:
         :return:
         """
-        if train_episode is None:
-            return o_r_d_i[1]
-
-        else:  # Todo
-            return o_r_d_i[1]
+        return o_r_d_i[1]
 
     def get_policy(self):
         return QArray(action_space=self.action_space, parameters=self.parameters)

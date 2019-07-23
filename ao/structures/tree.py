@@ -140,7 +140,9 @@ class Tree:
             else:
                 s += green
 
-            s += "".join([tab] * node.depth + ["|", str(id(node.data)) + ". depth : " + str(node.depth), '\n'])
+            s += "".join([tab] * node.depth + ["|", str(id(node.data)) +
+                                               ". depth : " + str(node.depth) +
+                                               " value : " + str(node.value), '\n'])
         return s + white
 
     def tree_to_string(self, next_node):

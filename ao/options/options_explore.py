@@ -9,6 +9,7 @@ class OptionExploreAbstract(metaclass=ABCMeta):
         self.initial_state = None
         self.action_space = action_space
         self.index = None
+        self.score = 0  # random option can find rewards too
 
     def __repr__(self):
         return "".join(["Option_explore(", str(self.initial_state), ")"])
@@ -23,6 +24,7 @@ class OptionExploreAbstract(metaclass=ABCMeta):
         :return: void
         """
         self.initial_state = initial_state
+        self.score = 0
 
     def check_end_option(self, new_state):
         """
@@ -46,12 +48,15 @@ class OptionRandomExplore(OptionExploreAbstract):
     This is a special option to explore
     """
 
-    def update_option(self, *args):
+    def update_option(self, o_r_d_i, intra_reward, action, end_option, train_episode=None):
         """
         Nothing to update here
         :return:
         """
-        pass
+        if o_r_d_i[1] > 0:
+            self.score = o_r_d_i[1]
+        else:
+            self.score = 0
 
     def act(self, train_episode):
         """

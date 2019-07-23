@@ -1,5 +1,7 @@
 import cv2
 from gym.envs.classic_control import rendering
+import pyglet
+import numpy as np
 
 
 class ShowRender(object):
@@ -12,7 +14,12 @@ class ShowRender(object):
         self.agent_view = False
 
         self.viewer = rendering.SimpleImageViewer()
-        
+        self.viewer.width = 512
+        self.viewer.height = 512
+        self.viewer.window = pyglet.window.Window(width=self.viewer.width, height=self.viewer.height,
+                                                  display=self.viewer.display, vsync=False, resizable=True)
+        self.viewer.window.on_key_press = self.key_press
+
     def render(self, observation):
         """
         :param observation: a dictionary containing the observations:
@@ -38,12 +45,12 @@ class ShowRender(object):
                 elif self.option_view:
                     self.display(observation["option"])
 
+        else:
+            self.viewer.imshow(np.array([[[0]]]))
+
     def display(self, image_pixel):
         img = cv2.resize(image_pixel, (512, 512), interpolation=cv2.INTER_NEAREST)
         self.viewer.imshow(img)
-
-        if self.viewer.window is not None:
-            self.viewer.window.on_key_press = self.key_press
 
     def close(self):
         self.viewer.close()
@@ -63,7 +70,6 @@ class ShowRender(object):
             self.set_agent_view()
 
         if key == ord(" "):
-
             if self.option_view:
                 self.set_vanilla_view()
 

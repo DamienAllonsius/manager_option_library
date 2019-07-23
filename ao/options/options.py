@@ -35,13 +35,28 @@ class OptionAbstract(metaclass=ABCMeta):
     def __str__(self):
         return "option from " + str(self.initial_state) + " to " + str(self.terminal_state)
 
-    @abstractmethod
-    def update_option(self,  *args, **kwargs):
+    def update_option(self, o_r_d_i, intra_reward, action, end_option, train_episode=None):
         """
-        Updates the option's characteristics
-        :return void
+        updates the parameters of the option, in particular self.policy.
+        Train mode and simulate mode are distinguished by the value of train_episode.
+        self.policy.update_policy :
+        - In simulation mode : updates only the current state.
+        - In learning mode : updates also the values of Q function.
+        :param o_r_d_i:  Observation, Reward, Done, Info
+        :param intra_reward: an additional reward given when the option reaches a terminal state
+        :param action: the last action performed
+        :param end_option: check if the option ended
+        :param train_episode: the number of the current training episode
+        :return: void
         """
-        raise NotImplementedError()
+        # compute the rewards
+        total_reward = self.compute_total_reward(o_r_d_i, intra_reward, action, end_option)
+
+        # update the parameters
+        self.update_parameters(o_r_d_i, intra_reward, total_reward, action, end_option, train_episode)
+
+        # compute the total score
+        self.score = self.compute_total_score(o_r_d_i, action, end_option, train_episode)
 
     def check_end_option(self, new_state):
         """
@@ -112,6 +127,14 @@ class OptionAbstract(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def update_parameters(self, o_r_d_i, intra_reward, total_reward, action, end_option, train_episode):
+        """
+        update all the option's parameter. Could be a neural networks or any policy
+        :return:
+        """
+        raise NotImplementedError()
+
 
 class OptionQLearning(OptionAbstract):
     """
@@ -125,29 +148,6 @@ class OptionQLearning(OptionAbstract):
         """
         super().__init__(action_space, parameters, index)
         self.policy = self.get_policy()
-
-    def update_option(self, o_r_d_i, intra_reward, action, end_option, train_episode=None):
-        """
-        updates the parameters of the option, in particular self.policy.
-        Train mode and simulate mode are distinguished by the value of train_episode.
-        self.policy.update_policy :
-        - In simulation mode : updates only the current state.
-        - In learning mode : updates also the values of Q function.
-        :param o_r_d_i:  Observation, Reward, Done, Info
-        :param intra_reward: an additional reward given when the option reaches a terminal state
-        :param action: the last action performed
-        :param end_option: check if the option ended
-        :param train_episode: the number of the current training episode
-        :return: void
-        """
-        # compute the rewards
-        total_reward = self.compute_total_reward(o_r_d_i, intra_reward, action, end_option)
-
-        # update the q function
-        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
-
-        # compute the total score
-        self.score = self.compute_total_score(o_r_d_i, action, end_option, train_episode)
 
     def act(self, train_episode=None):
         """
@@ -208,3 +208,17 @@ class OptionQLearning(OptionAbstract):
         :return:
         """
         raise NotImplementedError()
+
+    def update_parameters(self, o_r_d_i, intra_reward, total_reward, action, end_option, train_episode):
+        """
+        updates the parameters.
+        N.B.: TODO intra_reward is not used here !
+        :param o_r_d_i:
+        :param intra_reward: intra_reward is not used
+        :param total_reward:
+        :param action:
+        :param end_option:
+        :param train_episode:
+        :return: void
+        """
+        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)

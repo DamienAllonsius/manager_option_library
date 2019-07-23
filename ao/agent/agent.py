@@ -184,14 +184,13 @@ class AbstractAgentOption(AbstractAgent):
         if terminal_state is None:
             # in this case : explore
             self.explore_option.reset(self.policy.get_current_state())
-
             return self.explore_option
 
         else:  # in this case, activate an option from the list self.option_set
             # get the information from the env that the option needs to reset
             option_states = self.get_option_states(o_r_d_i, terminal_state)
 
-            # set the parameters  of the option with that states
+            # set the parameters of the option with that states
             self.option_list[best_option_index].reset(*option_states)
 
             return self.option_list[best_option_index]
@@ -229,9 +228,14 @@ class AbstractAgentOption(AbstractAgent):
         :param train_episode:
         :return:
         """
-        total_reward = None
-        if option_index is not None:
+        if option_index is not None:  # agent activated a proper option
             total_reward = self.compute_total_reward(o_r_d_i, option_index, train_episode)
+
+        else:  # agent activated a random exploration
+            total_reward = self.explore_option.score
+
+        if total_reward > 0:
+            input("reward : " + str(total_reward) + " :)")
 
         # then, update the policy
         self.policy.update_policy(o_r_d_i[0]["agent"], total_reward, option_index, train_episode)
@@ -308,7 +312,9 @@ class AbstractAgentOption(AbstractAgent):
         plt.plot(x)
         plt.title("success rate of options' transitions")
         plt.draw()
-        plt.pause(.001)
+        plt.pause(0.01)
+        plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition" + "success_rate_transition")
+        plt.savefig("success_rate_transition")
 
     def get_intra_reward(self, end_option, next_state, current_option, train_episode):
         """
