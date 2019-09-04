@@ -1,3 +1,10 @@
+"""
+ongoing implementation
+"""
+
+from mo.utils.miscellaneous import red, white
+
+
 class GraphNode(object):
     """
     oriented graph
@@ -7,15 +14,10 @@ class GraphNode(object):
         :param index: state id, an integer
         :param nodes_out: edges between self and nodes in nodes_out are directed towards nodes_out
         """
+        input("GraphNode is a DEPRECATED CLASS")
         self.value = 0
         self.index = index
         self.nodes_out = list()
-
-        # nodes_in
-        if nodes_in is not None:
-            self.nodes_in = nodes_in
-            for n in nodes_in:
-                n.nodes_out.append(self)
 
         # nodes_out
         if nodes_out is not None:
@@ -33,26 +35,7 @@ class GraphNode(object):
         return "index: " + str(self.index)
 
     def __str__(self):
-        s = str()
-        if self.nodes_in:
-            for n in self.nodes_in:
-                s += str(n.index) + " "
-
-        else:
-            s += "_ "
-
-        s += " --> "
-        s += str(self.index)
-        s += " --> "
-
-        if self.nodes_out:
-            for n in self.nodes_out:
-                s += str(n.index) + " "
-
-        else:
-            s += "_ "
-
-        return s
+        pass
 
     def depth_first(self, visited_nodes=None):
         """
@@ -65,7 +48,7 @@ class GraphNode(object):
             visited_nodes = [self]
 
         yield self
-        for neighbour in self.nodes_out + self.nodes_in:
+        for neighbour in self.nodes_out:
             if neighbour not in visited_nodes:
                 visited_nodes.append(neighbour)
                 for node in neighbour.depth_first(visited_nodes):
@@ -89,16 +72,8 @@ class GraphNode(object):
             for node, depth in neighbour.depth_first(k + 1):
                 yield node, depth
 
-        for neighbour in self.nodes_in:
-            for node, depth in neighbour.depth_first(k + 1):
-                yield node, depth
-
-
     def get_out_values(self):
         return [n.value for n in self.nodes_out]
-
-    def get_in_values(self):
-        return [n.value for n in self.nodes_in]
 
 
 class Graph:
@@ -142,7 +117,7 @@ class Graph:
             if new_index == self.current_index:
                 s += red
             s += str(new_index) + white
-            if new_index not in visited_index
+            if new_index not in visited_index:
                 s += self.graph_to_string(n.index, visited_index)
 
 

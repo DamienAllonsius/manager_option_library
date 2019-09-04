@@ -13,6 +13,7 @@ class Node(object):
     A node has a value and a variable data which is used to store a state representation.
     """
     def __init__(self, data, parent=None):
+        input("GraphNode is a DEPRECATED CLASS")
         self.value = 0
         self.data = data  # a.k.a state
 

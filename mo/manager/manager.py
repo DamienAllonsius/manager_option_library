@@ -2,12 +2,15 @@
 This library can be connected to a gym environment or any kind of environment as long as it has the following methods:
 - env.reset
 - env.step
+
+todo : intra_reward, find_best_action.
 """
 import numpy as np
 
 from abc import ABCMeta, abstractmethod
 from tqdm import tqdm
 from mo.policies.policy_manager import AbstractPolicyManager
+from mo.policies.policy_option import PolicyOptionQArray
 from mo.options.options import AbstractOption
 from mo.options.options_explore import AbstractOptionExplore
 from mo.utils.save_results import SaveResults
@@ -51,7 +54,7 @@ class AbstractManager(metaclass=ABCMeta):
         self.score = 0
         self.policy.reset(initial_state)
 
-    def _train_simulate_manager(self, env, train_episode=None):
+    def _train_simulate(self, env, train_episode=None):
         """
         Method used to train or simulate the manager (the main loop)
 
@@ -92,9 +95,7 @@ class AbstractManager(metaclass=ABCMeta):
             correct_termination = self.check_end_option(current_option, o_r_d_i[0]["manager"])
 
             # update the option
-            intra_reward = self.get_intra_reward(correct_termination, o_r_d_i[0]["option"], current_option,
-                                                 train_episode)
-            current_option.update_option(o_r_d_i, intra_reward, action, correct_termination, train_episode)
+            current_option.update_option(o_r_d_i, action, correct_termination, train_episode)
 
             # If the option is done, update the manager
             if correct_termination is not None:
@@ -102,11 +103,11 @@ class AbstractManager(metaclass=ABCMeta):
                     # record the correct transition when the option is a regular option (i.e. not an explore option)
                     self.write_success_rate_transitions(correct_termination)
 
-                # the agent does not need to know if the correct_termination is 0 or 1.
-                self.update_agent(o_r_d_i, current_option, train_episode)
+                # the manager does not need to know if the correct_termination is 0 or 1.
+                self.update_manager(o_r_d_i, current_option, train_episode)
                 current_option = None
 
-            done = self.check_end_agent(o_r_d_i, current_option, train_episode)
+            done = self.check_end_manager(o_r_d_i)
 
     def select_option(self, o_r_d_i, train_episode=None):
         """
@@ -126,7 +127,7 @@ class AbstractManager(metaclass=ABCMeta):
             self.option_list[best_option_index].reset(o_r_d_i[0]["option"])
             return self.option_list[best_option_index]
 
-    def update_agent(self, o_r_d_i, option, train_episode=None):
+    def update_manager(self, o_r_d_i, option, train_episode=None):
         """
         updates the manager parameters.
         In simulation mode, updates
@@ -140,13 +141,13 @@ class AbstractManager(metaclass=ABCMeta):
         :return : void
         """
         if train_episode is None:  # in simulation mode
-            self.score = self.compute_total_score(o_r_d_i, option, train_episode)
+            self.score += option.score
 
         else:  # in training mode
             self._update_policy(o_r_d_i, option)
 
             # add a new option if necessary
-            missing_option = self.policy.get_max_number_successors() - len(self.option_list)
+            missing_option = self.compute_number_options_needed() - self.get_number_options()
             assert missing_option == 1 or missing_option == 0, "number of options is wrong"
             if missing_option:
                 self.option_list.append(self.new_option())
@@ -154,9 +155,9 @@ class AbstractManager(metaclass=ABCMeta):
     def _update_policy(self, o_r_d_i, option):
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
 
-    def train_agent(self, environment, seed=0):
+    def train(self, environment, seed=0):
         """
-        Method used to train the RL manager. It calls function _train_simulate_agent with the current training episode
+        Method used to train the RL manager. It calls function _train_simulate_manager with the current training episode
         :return: Nothing
         """
         # set the seeds
@@ -171,17 +172,17 @@ class AbstractManager(metaclass=ABCMeta):
             self.show_render = AbstractManager.get_show_render_train()
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
-            self._train_simulate_manager(environment, t)
+            self._train_simulate(environment, t)
 
             if not t % 200:
                 self.plot_success_rate_transitions()
 
         self.show_render.close()
 
-    def simulate_agent(self, environment, seed=0):
+    def simulate(self, environment, seed=0):
         """
         Method used to train the RL manager.
-        It calls _train_simulate_agent method with parameter "train_episode" set to None
+        It calls _train_simulate_manager method with parameter "train_episode" set to None
         :return: Nothing
         """
         # set the seeds
@@ -196,7 +197,7 @@ class AbstractManager(metaclass=ABCMeta):
             self.show_render = AbstractManager.get_show_render_simulate()
 
         # simulate
-        self._train_simulate_manager(environment)
+        self._train_simulate(environment)
 
         # write the results
         self.save_results.write_reward(self.parameters["number_episodes"], self.score)
@@ -239,13 +240,6 @@ class AbstractManager(metaclass=ABCMeta):
         plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition" + "success_rate_transition")
         plt.savefig("success_rate_transition")
 
-    def get_intra_reward(self, correct_termination, next_state, current_option, train_episode):
-        """
-        returns a reward based on the maximum value of the next_state over all options
-        (maybe one should select some options instead of using all options).
-        """
-        return 0
-
     def check_end_option(self, option, o_r_d_i):
         """
         check if the option ended and if the termination is correct.
@@ -259,7 +253,7 @@ class AbstractManager(metaclass=ABCMeta):
         if option is a regular option:
         - True if ended in the correct new abstract state, False if the new abstract state is wrong.
         """
-        if self.get_current_state() == o_r_d_i[0]["manager"]:
+        if self.policy.get_current_state() == o_r_d_i[0]["manager"]:
             # option is not done
             return None
 
@@ -282,30 +276,24 @@ class AbstractManager(metaclass=ABCMeta):
     def get_show_render_simulate():
         return ShowRender()
 
-    # Method to be implemented by the sub classes
-
-    @abstractmethod
-    def compute_total_score(self, o_r_d_i, option, train_episode):
-        """
-        :return: a float corresponding of the score of the manager accumulated so far
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def check_end_agent(self, o_r_d_i, option, train_episode):
+    @staticmethod
+    def check_end_manager(o_r_d_i):
         """
         Check if the current episode is over or not.
-        The output of this function will update the variable "done" in method self._train_simulate_manager
+        The output of this function will update the variable "done" in method self._train_simulate_manager.
+        Returns by default o_r_d_i[2], but can be overwritten.
         :param o_r_d_i:
-        :param option:
-        :param train_episode:
         :return: True iff the manager is done.
         """
-        raise NotImplementedError()
+        return o_r_d_i[2]
 
-    @abstractmethod
-    def get_current_state(self):
-        raise NotImplementedError()
+    def get_number_options(self):
+        return len(self.option_list)
+
+    def compute_number_options_needed(self):
+        return self.policy.get_max_number_successors()
+
+    # Method to be implemented by the sub classes
 
     @abstractmethod
     def new_option(self) -> AbstractOption:
@@ -331,3 +319,141 @@ class AbstractManager(metaclass=ABCMeta):
         :return: a class which inherits from AbstractPolicyManager
         """
         raise NotImplementedError()
+
+   # def get_intra_reward(self, end_option, next_state, current_option, train_episode):
+   #      """
+   #      returns a reward based on the maximum value of the next_state over all options
+   #      (maybe one should select some options instead of using all options).
+   #      :param end_option: if the option ended or not
+   #      :param next_state: the next lower level state
+   #      :param current_option: the current option.
+   #      :param train_episode:
+   #      :return: an integer corresponding to the value of the last action:
+   #      - if end_option is False : 0
+   #      - if end_option is True : maximum value over all options except the current option of this state
+   #      """
+   #      if not (end_option and train_episode and issubclass(type(current_option), AbstractOption)):
+   #          return 0
+   #
+   #      else:
+   #          intra_rewards = []
+   #          for option in self.option_list:
+   #
+   #              if option.index < len(self.policy.tree.current_node.children[current_option.index].children):
+   #                  intra_rewards.append(option.get_value(next_state))
+   #
+   #          if intra_rewards:
+   #              return max(intra_rewards)
+   #          else:
+   #              return 0
+
+
+class PlainQLearning:
+    """
+    Plan Q Learning implementation.
+    *NOT TESTED*
+    No options here: this manager is an manager !
+    this agent is a baseline to compare the performances with the option setting
+    """
+
+    def __init__(self, action_space, parameters):
+        self.parameters = parameters
+        self.current_state = None
+        self.policy = PolicyOptionQArray(action_space, parameters)
+        self.score = 0
+        self.show_render = None  # useful to resize the observation
+
+    def _train_simulate(self, env, train_episode=None):
+        # reset the parameters
+        obs = env.reset()
+        self.reset(obs)
+        done = False
+
+        # render the image
+        if self.parameters["display_environment"]:
+            self.show_render.render(obs)
+
+        while not done:
+            # choose an action
+            action = self.act(train_episode)
+
+            # get the output
+            o_r_d_i = env.step(action)
+
+            # update the manager
+            self.update_agent(o_r_d_i, action, train_episode)
+
+            # display the observation if needed
+            if self.parameters["display_environment"]:
+                self.show_render.render(o_r_d_i[0])
+
+            # update variable done
+            done = self.check_end_agent(o_r_d_i)
+
+    def train(self, environment, seed=0):
+        """
+        Method used to train the RL manager. It calls function _train_simulate with the current training episode
+        :return: Nothing
+        """
+        # set the seeds
+        np.random.seed(seed)
+        environment.seed(seed)
+
+        # prepare to display the states
+        if self.parameters["display_environment"]:
+            self.show_render = ShowRender()
+
+        for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
+            self._train_simulate(environment, t)
+
+    def simulate(self, environment, seed=0):
+        """
+        Method used to train the RL manager.
+        It calls _train_simulate method with parameter "train_episode" set to None
+        :return: Nothing
+        """
+        # set the seeds
+        np.random.seed(seed)
+        environment.seed(seed)
+
+        # prepare the file for the results
+        save_results = SaveResults(self.parameters)
+        save_results.write_setting()
+        save_results.set_file_results_name(seed)
+
+        # simulate
+        self._train_simulate(environment)
+
+        # write the results and write that the experiment went well
+        save_results.write_reward(self.parameters["number_episodes"], self.score)
+        save_results.write_message("Experiment complete.")
+
+    def reset(self, initial_state):
+        self.policy.reset(initial_state)
+
+    @staticmethod
+    def compute_total_score(o_r_d_i):
+        return o_r_d_i[1]
+
+    def act(self, train_episode):
+        if (train_episode is not None) and (np.random.rand() < self.parameters["probability_random_action_agent"]):
+            return self.policy.get_random_action()
+
+        else:
+            return self.policy.find_best_action(train_episode)
+
+    def update_agent(self, o_r_d_i, action, train_episode):
+        # update the policy
+        total_reward = self.compute_total_reward(o_r_d_i)
+        self.policy.update_policy(o_r_d_i[0], total_reward, action, False, train_episode)
+
+        # update the score
+        self.score += self.compute_total_score(o_r_d_i)
+
+    @staticmethod
+    def check_end_agent(o_r_d_i):
+        return o_r_d_i[2]
+
+    @staticmethod
+    def compute_total_reward(o_r_d_i):
+        return o_r_d_i[1]

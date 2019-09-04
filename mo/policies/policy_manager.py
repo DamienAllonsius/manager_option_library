@@ -3,7 +3,6 @@ Policies that can be applied only on agents
 """
 from abc import ABCMeta, abstractmethod
 from mo.utils.miscellaneous import red, white
-import numpy as np
 
 
 class AbstractPolicyManager(metaclass=ABCMeta):
@@ -177,7 +176,7 @@ class GraphPolicy(AbstractPolicyManager):
             else:
                 return self.transitions[self.current_state_index].index(target_state_index)
 
-        # todo : find a good strategy
+        # todo : find a good planning strategy
         # if self.current_state_index is None:
         #     return None  # explore
         #

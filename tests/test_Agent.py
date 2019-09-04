@@ -1,5 +1,5 @@
 import unittest
-from mo.examples.manager_example import ManagerMontezuma
+from mo.examples.Q_learning import ManagerMontezuma
 from mo.examples.policy_examples_manager import QGraph
 import numpy as np
 import copy
