@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 packages_ = find_packages()
 packages = [p for p in packages_ if not(p == 'tests')]
 
-setup(name='ao',
+setup(name='mo',
       version='0.1',
       description='A package for making agents following a Hierarchical Reinforcement Learning strategy',
-      url='git@github.com:DamienAllonsius/agent_option_library.git',
+      url='git@github.com:DamienAllonsius/manager_option_library.git',
       author='Damien Allonsius',
       author_email='allonsius.damien@hotmail.fr',
       license='MIT',

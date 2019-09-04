@@ -23,8 +23,8 @@ class ShowRender(object):
     def render(self, observation):
         """
         :param observation: a dictionary containing the observations:
-        - obersation vanilla
-        - observation agent
+        - observation vanilla
+        - observation manager
         - observation option
         :return:
         """
@@ -33,14 +33,14 @@ class ShowRender(object):
                 self.display(observation)
 
             else:
-                assert list(observation.keys()) == ["vanilla", "agent", "option"], \
-                    "observation must be a dictionary with 3 keys : vanilla, agent and option"
+                assert list(observation.keys()) == ["vanilla", "manager", "option"], \
+                    "observation must be a dictionary with 3 keys : vanilla, manager and option"
 
                 if self.vanilla_view:
                     self.display(observation["vanilla"])
 
                 elif self.agent_view:
-                    self.display(observation["agent"])
+                    self.display(observation["manager"])
 
                 elif self.option_view:
                     self.display(observation["option"])
@@ -92,7 +92,7 @@ class ShowRender(object):
         self.agent_view = False
 
     def set_agent_view(self):
-        print("agent's view")
+        print("manager's view")
         self.vanilla_view = False
         self.option_view = False
         self.agent_view = True

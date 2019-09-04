@@ -23,7 +23,6 @@ class SaveResults(object):
 
     def write_message(self, message):
         """
-        todo : replace open and close by "with ... "
         :param message:
         :return:
         """

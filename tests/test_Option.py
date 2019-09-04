@@ -1,5 +1,5 @@
 import unittest
-from ao.examples.options_examples import OptionQArray
+from mo.examples.options_examples import OptionQArray
 import numpy as np
 
 
@@ -10,9 +10,9 @@ class OptionTest(unittest.TestCase):
                            "penalty_end_option": -10,
                            "learning_rate": 0.1}
 
-        self.o_r_d_i1 = [{"agent": "state 1", "option": "state option 1"}, 7, True, "no-info"]
-        self.o_r_d_i2 = [{"agent": "terminal state", "option": "state option 2"}, 2, False, "no-info"]
-        self.o_r_d_i3 = [{"agent": "state 3", "option": "state option 3"}, 17, True, "no-info"]
+        self.o_r_d_i1 = [{"manager": "state 1", "option": "state option 1"}, 7, True, "no-info"]
+        self.o_r_d_i2 = [{"manager": "terminal state", "option": "state option 2"}, 2, False, "no-info"]
+        self.o_r_d_i3 = [{"manager": "state 3", "option": "state option 3"}, 17, True, "no-info"]
 
         self.option1 = OptionQArray(action_space=range(2), parameters=self.parameters, index=0)
         self.option1.reset("state 0", "state option 0", "terminal state")

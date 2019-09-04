@@ -1,4 +1,4 @@
-from ao.policies.option.option_policy import PolicyAbstractOption
+from mo.policies.policy_option import PolicyAbstractOption
 import numpy as np
 
 

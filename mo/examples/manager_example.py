@@ -1,30 +1,21 @@
-from ao.agent.agent import AbstractAgentOption
-from ao.examples.options_examples import OptionQArray
-from ao.examples.policy_examples_agent import QGraph
-from ao.options.options import OptionAbstract
-from ao.options.options_explore import OptionRandomExplore
-from ao.agent.agent import AbstractAgent
+from mo.manager.manager import AbstractManager
+from mo.examples.options_examples import OptionQArray
+from mo.examples.policy_examples_manager import QGraph
+from mo.options.options import AbstractOption
+from mo.options.options_explore import OptionExplore
 from tqdm import tqdm
 import numpy as np
-from ao.examples.policy_examples_option import QArray
-from ao.utils.save_results import SaveResults
-from ao.utils.show_render import ShowRender
+from mo.examples.policy_examples_option import QArray
+from mo.utils.save_results import SaveResults
+from mo.utils.show_render import ShowRender
 from abc import abstractmethod
 
 
-class AgentOptionMontezuma(AbstractAgentOption):
+class ManagerMontezuma(AbstractManager):
 
     def __init__(self, action_space, parameters):
         super().__init__(action_space, parameters)
         self.show_render = None
-
-    def get_option_states(self, o_r_d_i, terminal_state):
-        """
-        :param terminal_state:
-        :param o_r_d_i:
-        :return: the initial, current and terminal states
-        """
-        return o_r_d_i[0]["agent"], o_r_d_i[0]["option"], terminal_state
 
     def compute_total_score(self, o_r_d_i, current_option, train_episode):
         return o_r_d_i[1]
@@ -38,7 +29,7 @@ class AgentOptionMontezuma(AbstractAgentOption):
         """
         return o_r_d_i[1]
 
-    def get_policy(self):
+    def new_policy(self):
         return QGraph(self.parameters)
 
     def check_end_agent(self, o_r_d_i, current_option, train_episode):
@@ -53,18 +44,18 @@ class AgentOptionMontezuma(AbstractAgentOption):
     def get_current_state(self):
         return self.policy.get_current_state()
 
-    def get_explore_option(self):
+    def new_explore_option(self):
         """
         can be overwritten if needed
         :return:
         """
-        return OptionRandomExplore(self.action_space)
+        return OptionExplore(self.action_space)
 
-    def get_option(self) -> OptionAbstract:
-        return OptionQArray(self.action_space, self.parameters, len(self))
+    def new_option(self) -> AbstractOption:
+        return OptionQArray(self.action_space, self.parameters, len(self.option_list))
 
 
-class PlainQLearning(AbstractAgent):
+class PlainQLearning():
     """
     Plan Q Learning implementation.
     *NOT TESTED*
@@ -94,7 +85,7 @@ class PlainQLearning(AbstractAgent):
             # get the output
             o_r_d_i = env.step(action)
 
-            # update the agent
+            # update the manager
             self.update_agent(o_r_d_i, action, train_episode)
 
             # display the observation if needed
@@ -106,7 +97,7 @@ class PlainQLearning(AbstractAgent):
 
     def train_agent(self, environment, seed=0):
         """
-        Method used to train the RL agent. It calls function _train_simulate_agent with the current training episode
+        Method used to train the RL manager. It calls function _train_simulate_agent with the current training episode
         :return: Nothing
         """
         # set the seeds
@@ -122,7 +113,7 @@ class PlainQLearning(AbstractAgent):
 
     def simulate_agent(self, environment, seed=0):
         """
-        Method used to train the RL agent.
+        Method used to train the RL manager.
         It calls _train_simulate_agent method with parameter "train_episode" set to None
         :return: Nothing
         """

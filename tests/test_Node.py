@@ -1,5 +1,5 @@
 import unittest
-from ao.structures.tree import Node
+from mo.structures.tree import Node
 
 
 class NodeTest(unittest.TestCase):

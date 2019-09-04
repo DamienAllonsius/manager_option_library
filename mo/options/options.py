@@ -6,11 +6,10 @@ penalty_end_option
 penalty_option_action
 """
 from abc import ABCMeta, abstractmethod
-from ao.policies.option.option_policy import PolicyAbstractOption
-from ao.utils.miscellaneous import obs_equal
+from mo.policies.policy_option import PolicyAbstractOption
 
 
-class OptionAbstract(metaclass=ABCMeta):
+class AbstractOption(metaclass=ABCMeta):
     """
     Abstract option class that barely only needs update, reset and act functions.
     """
@@ -24,9 +23,6 @@ class OptionAbstract(metaclass=ABCMeta):
         self.action_space = action_space
         self.parameters = parameters
         self.score = 0
-        self.initial_state = None
-        self.terminal_state = None
-        self.activated = False  # safeguard that indicated if this option has been activated correctly
         self.index = index
 
     def __repr__(self):
@@ -58,19 +54,6 @@ class OptionAbstract(metaclass=ABCMeta):
         # compute the total score
         self.score = self.compute_total_score(o_r_d_i, action, end_option, train_episode)
 
-    def check_end_option(self, new_state):
-        """
-        Checks if the option has terminated or not.
-        The new_state must be *of the same form* as the initial_state (transformed or not).
-        :param new_state:
-        :return: True if the new_state is different from the initial state
-        """
-        end_option = not obs_equal(new_state, self.initial_state)
-        if end_option:
-            self.activated = False
-
-        return end_option
-
     @abstractmethod
     def act(self, *args, **kwargs):
         """
@@ -82,7 +65,7 @@ class OptionAbstract(metaclass=ABCMeta):
     @abstractmethod
     def reset(self, *args, **kwargs):
         """
-        reset parameters and turn activation to True: self.activated = True
+        reset parameters
         :param args:
         :param kwargs:
         :return:
@@ -136,7 +119,7 @@ class OptionAbstract(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
-class OptionQLearning(OptionAbstract):
+class QLearningOption(AbstractOption):
     """
     Another Abstract class where its policy is updated with Q learning algorithm.
     The policy is stored and computed through variable *policy* which inherits from PolicyAbstract class
@@ -180,7 +163,7 @@ class OptionQLearning(OptionAbstract):
     def compute_total_reward(self, o_r_d_i, intra_reward, action, end_option):
         """
         Computes the total reward following actions to update the policy
-        This function depends on the environment in which the agent evolves.
+        This function depends on the environment in which the manager evolves.
         The child class will compute the total reward here, depending on the specific
         features of the environment.
         :param o_r_d_i:  Observation, Reward, Done, Info
@@ -194,7 +177,7 @@ class OptionQLearning(OptionAbstract):
     @abstractmethod
     def compute_total_score(self, *args, **kwargs):
         """
-        updates self.score: an overall score accumulated so far. This score is used by the agent
+        updates self.score: an overall score accumulated so far. This score is used by the manager
         :param args:
         :param kwargs:
         :return: void

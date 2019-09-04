@@ -1,9 +1,9 @@
-from ao.options.options import OptionQLearning
-from ao.examples.policy_examples_option import QArray
+from mo.options.options import QLearningOption
+from mo.examples.policy_examples_option import QArray
 import numpy as np
 
 
-class OptionQArray(OptionQLearning):
+class OptionQArray(QLearningOption):
     """
     Test ok
     Example of an OptionQLearning using an Array policy.
@@ -20,8 +20,8 @@ class OptionQArray(OptionQLearning):
         """
         total_reward = o_r_d_i[1] + intra_reward
         if end_option:
-            total_reward += (self.terminal_state == o_r_d_i[0]["agent"]) * self.parameters["reward_end_option"]
-            total_reward += (self.terminal_state != o_r_d_i[0]["agent"]) * self.parameters["penalty_end_option"]
+            total_reward += (self.terminal_state == o_r_d_i[0]["manager"]) * self.parameters["reward_end_option"]
+            total_reward += (self.terminal_state != o_r_d_i[0]["manager"]) * self.parameters["penalty_end_option"]
 
         return total_reward
 

@@ -30,3 +30,14 @@ def constrain_type(f):
 
     return decorated
 
+
+def check_type(object1, object2):
+    """
+    check that object1 inherits from object2
+    :param object1: the child class
+    :param object2: the parent class
+    :return:
+    """
+    if not issubclass(type(object1), object2):
+        raise TypeError("this class must return an object inheriting from " +
+                        object2.__name__ + " rather than " + type(object1).__name__)

@@ -1,11 +1,12 @@
 from collections import defaultdict
-from ao.utils.miscellaneous import *
-from ao.utils.sample import sample_pmf
+from mo.utils.miscellaneous import *
+from mo.utils.sample import sample_pmf
 
 
 class Node(object):
     """
     Tests: OK
+    Reviewed : No
     This class creates a Node.
     A Node is connected to its parent node via the variable self.parent.
     A Node has children, stored in the list self.children.

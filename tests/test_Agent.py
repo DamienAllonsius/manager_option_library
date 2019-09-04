@@ -1,6 +1,6 @@
 import unittest
-from ao.examples.agent_example import AgentOptionMontezuma
-from ao.examples.policy_examples_agent import QGraph
+from mo.examples.manager_example import ManagerMontezuma
+from mo.examples.policy_examples_manager import QGraph
 import numpy as np
 import copy
 
@@ -18,7 +18,7 @@ class AgentMontezumaTest(unittest.TestCase):
 
         self.action_space = range(4)
 
-        self.agent = AgentOptionMontezuma(action_space=self.action_space, parameters=self.parameters)
+        self.agent = ManagerMontezuma(action_space=self.action_space, parameters=self.parameters)
         self.q = QGraph(parameters=self.parameters)
         self.q._update_states("state 0")
         self.q._update_states("state 1")
@@ -29,14 +29,14 @@ class AgentMontezumaTest(unittest.TestCase):
         self.q._update_states("state 5")
         self.q.values = list(map(lambda x: list(np.random.rand(len(x))), self.q.state_graph))
 
-        self.o_r_d_i1 = [{"agent": "state 2", "option": "initial state option"}, 10, False, None]
-        self.o_r_d_i2 = [{"agent": "state 0", "option": "state0 option"}, 0, True, None]
-        self.o_r_d_i3 = [{"agent": "state 3", "option": "state0 option"}, 4, False, None]
+        self.o_r_d_i1 = [{"manager": "state 2", "option": "initial state option"}, 10, False, None]
+        self.o_r_d_i2 = [{"manager": "state 0", "option": "state0 option"}, 0, True, None]
+        self.o_r_d_i3 = [{"manager": "state 3", "option": "state0 option"}, 4, False, None]
 
         self.agent.policy = self.q
         self.agent.option_list = list()
         for k in range(self.q.get_max_number_successors()):
-            self.agent.option_list.append(self.agent.get_option())
+            self.agent.option_list.append(self.agent.new_option())
 
     def test_act(self):
         self.agent.policy.parameters["probability_random_action_agent"] = 1
@@ -53,7 +53,7 @@ class AgentMontezumaTest(unittest.TestCase):
         self.assertEqual(type(option).__name__, "OptionQArray")
 
         # are the current states updated before to activate the option ?
-        self.assertEqual(option.initial_state, self.o_r_d_i1[0]["agent"])
+        self.assertEqual(option.initial_state, self.o_r_d_i1[0]["manager"])
         self.assertEqual(option.policy.state_list[option.policy.current_state_index], self.o_r_d_i1[0]["option"])
 
         idmax = np.argmax(np.array(self.q.values[self.q.current_state_index]))
@@ -70,7 +70,7 @@ class AgentMontezumaTest(unittest.TestCase):
             self.assertListEqual(self.q.values[k], v_copy[k])
 
         for ordi in [self.o_r_d_i2, self.o_r_d_i3]:
-            state_index = self.q.states.index(ordi[0]["agent"])
+            state_index = self.q.states.index(ordi[0]["manager"])
             best_value = np.max(v_copy[state_index])
 
             total_reward = self.agent.compute_total_reward(ordi, self.agent.option_list[option_index],0)
@@ -83,7 +83,7 @@ class AgentMontezumaTest(unittest.TestCase):
             for k in range(len(v_copy)):
                 self.assertListEqual(list(self.agent.policy.values[k]), list(v_copy[k]))
 
-            self.assertEqual(self.agent.policy.get_current_state(), ordi[0]["agent"])
+            self.assertEqual(self.agent.policy.get_current_state(), ordi[0]["manager"])
 
     def test_update_agent(self):
         n = self.agent.policy.get_max_number_successors()
@@ -93,7 +93,7 @@ class AgentMontezumaTest(unittest.TestCase):
         current_idx = self.agent.policy.current_state_index
         val = self.agent.policy.values[self.agent.policy.current_state_index][option_index]
 
-        best_val = np.max(self.agent.policy.values[self.agent.policy.states.index(self.o_r_d_i1[0]["agent"])])
+        best_val = np.max(self.agent.policy.values[self.agent.policy.states.index(self.o_r_d_i1[0]["manager"])])
 
         val *= (1 - self.parameters["learning_rate"])
         val += self.parameters["learning_rate"]*(total_reward + best_val)
@@ -108,7 +108,7 @@ class AgentMontezumaTest(unittest.TestCase):
         self.agent.update_agent(self.o_r_d_i1, self.agent.option_list[0], 1)
         option_states = self.agent.get_option_states(self.o_r_d_i1, "terminal state")
 
-        self.assertEqual(option_states, (self.o_r_d_i1[0]["agent"], self.o_r_d_i1[0]["option"], "terminal state"))
+        self.assertEqual(option_states, (self.o_r_d_i1[0]["manager"], self.o_r_d_i1[0]["option"], "terminal state"))
         self.assertEqual(option_states,
                          (self.agent.policy.get_current_state(), self.o_r_d_i1[0]["option"], "terminal state"))
         self.assertEqual(option_states, (self.agent.get_current_state(), self.o_r_d_i1[0]["option"], "terminal state"))

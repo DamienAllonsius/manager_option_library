@@ -3,7 +3,7 @@ import numpy as np
 
 def sample_cdf(cum_probs):  # cumulative distribution function
     rand = np.random.rand()
-    return sum(cum_probs < rand)
+    return sum([int(prob < rand) for prob in cum_probs])
 
 
 def sample_pmf(probs):  # probability mass function
