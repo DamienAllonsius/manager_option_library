@@ -44,19 +44,23 @@ class AbstractOption(metaclass=ABCMeta):
     def compute_total_score(self, o_r_d_i, action, correct_termination):
         return self.score + o_r_d_i[1]
 
-    def compute_total_reward(self, o_r_d_i, correct_termination):
-        total_reward = o_r_d_i[1]
-
+    def compute_goal_reward(self, correct_termination):
+        """
+        A function that computes the reward or the penalty gotten when terminating.
+        :param correct_termination:
+        :return:
+        """
+        goal_reward = 0
         if correct_termination is None:
-            return total_reward
+            return goal_reward
 
         if correct_termination:
-            total_reward += self.parameters["reward_end_option"]
+            goal_reward += self.parameters["reward_end_option"]
 
         else:
-            total_reward += self.parameters["penalty_end_option"]
+            goal_reward += self.parameters["penalty_end_option"]
 
-        return total_reward
+        return goal_reward
 
     # methods that have to be implemented by the sub classes.
 
@@ -65,6 +69,16 @@ class AbstractOption(metaclass=ABCMeta):
         """
         Performs an action
         :return: an integer in range(self.number_actions)
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def compute_total_reward(self, *args, **kwargs):
+        """
+        keep in mind that you can use compute_goal_reward for this function.
+        :param args:
+        :param kwargs:
+        :return:
         """
         raise NotImplementedError()
 
