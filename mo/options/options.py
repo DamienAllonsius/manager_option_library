@@ -21,26 +21,6 @@ class AbstractOption(metaclass=ABCMeta):
     def __str__(self):
         return "option " + str(self.index)
 
-    def update_option(self, o_r_d_i, action, correct_termination, train_episode=None):
-        """
-        updates the parameters of the option
-        Train mode and simulate mode are distinguished by the value of train_episode.
-        :param o_r_d_i:  Observation, Reward, Done, Info
-        :param action: the last action performed
-        :param correct_termination: None -> option is not done. True, False -> terminated correctly or not.
-        :param train_episode: the number of the current training episode
-        :return: void
-        """
-        # compute the rewards
-        total_reward = self.compute_total_reward(o_r_d_i, correct_termination)
-
-        # update the parameters
-        end_option = correct_termination is not None
-        self.update_option_policy(o_r_d_i, total_reward, action, end_option, train_episode)
-
-        # compute the total score
-        self.score = self.compute_total_score(o_r_d_i, action, correct_termination)
-
     def compute_goal_reward(self, correct_termination):
         """
         A function that computes the reward or the penalty gotten when terminating.
@@ -60,11 +40,6 @@ class AbstractOption(metaclass=ABCMeta):
         return goal_reward
 
     # methods that have to be implemented by the sub classes.
-
-    @abstractmethod
-    def compute_total_score(self, o_r_d_i, action, correct_termination):
-        raise NotImplementedError()
-
     @abstractmethod
     def act(self, train_episode):
         """
@@ -74,19 +49,7 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def compute_total_reward(self, o_r_d_i, correct_termination):
-        """
-        keep in mind that you can use compute_goal_reward for this function.
-        :return:
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def update_option_policy(self, o_r_d_i, total_reward, action, end_option, train_episode):
-        """
-        update the options's policy
-        :return: an integer in range(self.number_actions)
-        """
+    def update_option(self, o_r_d_i, action, correct_termination, train_episode=None):
         raise NotImplementedError()
 
     @abstractmethod
@@ -117,9 +80,6 @@ class OptionQLearning(AbstractOption):
         """
         return self.policy.find_best_action(train_episode)
 
-    def update_option_policy(self, o_r_d_i, total_reward, action, end_option, train_episode):
-        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
-
     def reset(self, state):
         """
         Reset the current state
@@ -127,8 +87,13 @@ class OptionQLearning(AbstractOption):
         """
         self.policy.reset(state)
 
-    def compute_total_score(self, o_r_d_i, action, correct_termination):
-        return self.score + o_r_d_i[1]
+    def update_option(self, o_r_d_i, action, correct_termination, train_episode=None):
+        # compute the rewards
+        total_reward = o_r_d_i[1] + self.compute_goal_reward(correct_termination)
 
-    def compute_total_reward(self, o_r_d_i, correct_termination):
-        return o_r_d_i[1] + self.compute_goal_reward(correct_termination)
+        # update the parameters
+        end_option = correct_termination is not None
+        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
+
+        # compute the total score
+        self.score += o_r_d_i[1]
