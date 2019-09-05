@@ -10,7 +10,6 @@ import numpy as np
 from abc import ABCMeta, abstractmethod
 from tqdm import tqdm
 from mo.policies.policy_manager import AbstractPolicyManager
-from mo.policies.policy_option import PolicyOptionQArray
 from mo.options.options import AbstractOption
 from mo.options.options_explore import AbstractOptionExplore
 from mo.utils.save_results import SaveResults
@@ -320,29 +319,29 @@ class AbstractManager(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-   # def get_intra_reward(self, end_option, next_state, current_option, train_episode):
-   #      """
-   #      returns a reward based on the maximum value of the next_state over all options
-   #      (maybe one should select some options instead of using all options).
-   #      :param end_option: if the option ended or not
-   #      :param next_state: the next lower level state
-   #      :param current_option: the current option.
-   #      :param train_episode:
-   #      :return: an integer corresponding to the value of the last action:
-   #      - if end_option is False : 0
-   #      - if end_option is True : maximum value over all options except the current option of this state
-   #      """
-   #      if not (end_option and train_episode and issubclass(type(current_option), AbstractOption)):
-   #          return 0
-   #
-   #      else:
-   #          intra_rewards = []
-   #          for option in self.option_list:
-   #
-   #              if option.index < len(self.policy.tree.current_node.children[current_option.index].children):
-   #                  intra_rewards.append(option.get_value(next_state))
-   #
-   #          if intra_rewards:
-   #              return max(intra_rewards)
-   #          else:
-   #              return 0
+    # def get_intra_reward(self, end_option, next_state, current_option, train_episode):
+    #      """
+    #      returns a reward based on the maximum value of the next_state over all options
+    #      (maybe one should select some options instead of using all options).
+    #      :param end_option: if the option ended or not
+    #      :param next_state: the next lower level state
+    #      :param current_option: the current option.
+    #      :param train_episode:
+    #      :return: an integer corresponding to the value of the last action:
+    #      - if end_option is False : 0
+    #      - if end_option is True : maximum value over all options except the current option of this state
+    #      """
+    #      if not (end_option and train_episode and issubclass(type(current_option), AbstractOption)):
+    #          return 0
+    #
+    #      else:
+    #          intra_rewards = []
+    #          for option in self.option_list:
+    #
+    #              if option.index < len(self.policy.tree.current_node.children[current_option.index].children):
+    #                  intra_rewards.append(option.get_value(next_state))
+    #
+    #          if intra_rewards:
+    #              return max(intra_rewards)
+    #          else:
+    #              return 0

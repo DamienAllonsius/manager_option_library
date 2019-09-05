@@ -41,9 +41,6 @@ class AbstractOption(metaclass=ABCMeta):
         # compute the total score
         self.score = self.compute_total_score(o_r_d_i, action, correct_termination)
 
-    def compute_total_score(self, o_r_d_i, action, correct_termination):
-        return self.score + o_r_d_i[1]
-
     def compute_goal_reward(self, correct_termination):
         """
         A function that computes the reward or the penalty gotten when terminating.
@@ -65,6 +62,10 @@ class AbstractOption(metaclass=ABCMeta):
     # methods that have to be implemented by the sub classes.
 
     @abstractmethod
+    def compute_total_score(self, o_r_d_i, action, correct_termination):
+        raise NotImplementedError()
+
+    @abstractmethod
     def act(self, *args, **kwargs):
         """
         Performs an action
@@ -73,11 +74,9 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def compute_total_reward(self, *args, **kwargs):
+    def compute_total_reward(self, o_r_d_i, correct_termination):
         """
         keep in mind that you can use compute_goal_reward for this function.
-        :param args:
-        :param kwargs:
         :return:
         """
         raise NotImplementedError()
@@ -107,6 +106,7 @@ class OptionQLearning(AbstractOption):
     Policy is updated with Q learning algorithm.
     The policy is stored and computed through variable *policy* which inherits from PolicyAbstract class
     """
+
     def __init(self, action_space, parameters, index):
         super().__init__(action_space, parameters, index)
         self.policy = PolicyOptionQArray(action_space, parameters)
@@ -132,3 +132,9 @@ class OptionQLearning(AbstractOption):
         """
         # add the new state if needed and update the current state of self.policy
         self.policy.reset(current_state)
+
+    def compute_total_score(self, o_r_d_i, action, correct_termination):
+        return self.score + o_r_d_i[1]
+
+    def compute_total_reward(self, o_r_d_i, correct_termination):
+        return o_r_d_i[1] + self.compute_goal_reward(correct_termination)
