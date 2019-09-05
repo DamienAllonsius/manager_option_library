@@ -36,7 +36,7 @@ class AbstractOption(metaclass=ABCMeta):
 
         # update the parameters
         end_option = correct_termination is not None
-        self.update_option_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
+        self.update_option_policy(o_r_d_i, total_reward, action, end_option, train_episode)
 
         # compute the total score
         self.score = self.compute_total_score(o_r_d_i, action, correct_termination)
@@ -66,7 +66,7 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def act(self, *args, **kwargs):
+    def act(self, train_episode):
         """
         Performs an action
         :return: an integer in range(self.number_actions)
@@ -82,7 +82,7 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def update_option_policy(self, state, total_reward, action, correct_termination, train_episode):
+    def update_option_policy(self, o_r_d_i, total_reward, action, end_option, train_episode):
         """
         update the options's policy
         :return: an integer in range(self.number_actions)
@@ -90,11 +90,9 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def reset(self, *args, **kwargs):
+    def reset(self, state):
         """
         reset parameters
-        :param args:
-        :param kwargs:
         :return:
         """
         raise NotImplementedError()
@@ -119,19 +117,15 @@ class OptionQLearning(AbstractOption):
         """
         return self.policy.find_best_action(train_episode)
 
-    def update_option_policy(self, state, total_reward, action, end_option, train_episode):
-        self.policy.update_policy(state, total_reward, action, end_option, train_episode)
+    def update_option_policy(self, o_r_d_i, total_reward, action, end_option, train_episode):
+        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
 
-    def reset(self, initial_state, current_state, terminal_state):
+    def reset(self, state):
         """
-        Reset the initial and terminal states
-        :param initial_state: where the option starts;
-        :param current_state: where the option is;
-        :param terminal_state: where the option has to go;
+        Reset the current state
         :return: void
         """
-        # add the new state if needed and update the current state of self.policy
-        self.policy.reset(current_state)
+        self.policy.reset(state)
 
     def compute_total_score(self, o_r_d_i, action, correct_termination):
         return self.score + o_r_d_i[1]
