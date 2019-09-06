@@ -14,7 +14,7 @@ from mo.options.options import AbstractOption
 from mo.options.options_explore import AbstractOptionExplore
 from mo.utils.save_results import SaveResults
 from mo.utils.show_render import ShowRender
-from mo.utils.miscellaneous import obs_equal, check_type
+from mo.utils.miscellaneous import obs_equal, constrained_type, check_type
 from collections import deque
 import matplotlib.pyplot as plt
 
@@ -45,9 +45,9 @@ class AbstractManager(metaclass=ABCMeta):
         self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
 
         # checks that policy and options have the right type.
-        check_type(self.policy, AbstractPolicyManager)
-        check_type(self.explore_option, AbstractOptionExplore)
-        check_type(self.new_option(), AbstractOption)
+        constrained_type(self.policy, AbstractPolicyManager)
+        constrained_type(self.explore_option, AbstractOptionExplore)
+        constrained_type(self.new_option(), AbstractOption)
 
     def reset(self, initial_state):
         self.score = 0
@@ -98,7 +98,7 @@ class AbstractManager(metaclass=ABCMeta):
 
             # If the option is done, update the manager
             if correct_termination is not None:
-                if check_type(type(current_option), AbstractOption):
+                if check_type(current_option, AbstractOption):
                     # record the correct transition when the option is a regular option (i.e. not an explore option)
                     self.write_success_rate_transitions(correct_termination)
 
@@ -239,11 +239,11 @@ class AbstractManager(metaclass=ABCMeta):
         plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition" + "success_rate_transition")
         plt.savefig("success_rate_transition")
 
-    def check_end_option(self, option, o_r_d_i):
+    def check_end_option(self, option, obs_manager):
         """
         check if the option ended and if the termination is correct.
         :param option: explore option or regular option
-        :param o_r_d_i:
+        :param obs_manager:
         :return:
         - None if the option is not done.
         Otherwise:
@@ -252,20 +252,26 @@ class AbstractManager(metaclass=ABCMeta):
         if option is a regular option:
         - True if ended in the correct new abstract state, False if the new abstract state is wrong.
         """
-        if self.policy.get_current_state() == o_r_d_i[0]["manager"]:
+        if obs_equal(self.get_current_state(), obs_manager):
             # option is not done
             return None
 
         else:
             # option is done
-            if check_type(type(option), AbstractOptionExplore):
+            if check_type(option, AbstractOptionExplore):
+                print("explore")
                 return True
 
-            elif check_type(type(option), AbstractOption):
-                return obs_equal(o_r_d_i[0]["manager"], self.policy.get_next_state(option.index))
+            elif check_type(option, AbstractOption):
+                correct_transition = obs_equal(obs_manager, self.get_terminal_state(option.index))
+                if correct_transition:
+                    print("correct final state")
+                else:
+                    print("wrong final state")
+                return correct_transition
 
             else:
-                raise Exception("Option type not supported")
+                raise Exception(type(option).__name__ + " is not supported")
 
     @staticmethod
     def get_show_render_train():
@@ -291,6 +297,12 @@ class AbstractManager(metaclass=ABCMeta):
 
     def compute_number_options_needed(self):
         return self.policy.get_max_number_successors()
+
+    def get_current_state(self):
+        return self.policy.get_current_state()
+
+    def get_terminal_state(self, option_index):
+        return self.policy.get_next_state(option_index)
 
     # Method to be implemented by the sub classes
 
