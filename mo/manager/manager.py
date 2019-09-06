@@ -47,7 +47,6 @@ class AbstractManager(metaclass=ABCMeta):
         # checks that policy and options have the right type.
         constrained_type(self.policy, AbstractPolicyManager)
         constrained_type(self.explore_option, AbstractOptionExplore)
-        constrained_type(self.new_option(), AbstractOption)
 
     def reset(self, initial_state):
         self.score = 0
@@ -149,7 +148,9 @@ class AbstractManager(metaclass=ABCMeta):
             missing_option = self.compute_number_options_needed() - self.get_number_options()
             assert missing_option == 1 or missing_option == 0, "number of options is wrong"
             if missing_option:
-                self.option_list.append(self.new_option())
+                new_option = self.new_option()
+                constrained_type(new_option, AbstractOption)
+                self.option_list.append(new_option)
 
     def _update_policy(self, o_r_d_i, option):
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
