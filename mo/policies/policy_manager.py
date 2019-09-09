@@ -90,7 +90,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         self.current_state_index = None  # index of the current state
         self.number_explorations = []  # number of explorations done for each state
         self.max_explore = 10  # each state will be explored at most max_explore times todo : put it in parameters
-        self.edge_cost = -1  # todo: put it in parameters
+        self.edge_cost = -0.01  # todo: put it in parameters
 
         # the path that the agent is currently following
         self.current_path = []
@@ -137,7 +137,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
             self.transitions[self.current_state_index].append((new_state_index, edge_value))  # new vertex with a value
 
         else:
-            if new_state_index not in map(lambda t: t[0], self.transitions[self.current_state_index]):
+            if new_state_index not in [t[0] for t in self.transitions[self.current_state_index]]:
                 self.transitions[self.current_state_index].append((new_state_index, edge_value))
 
         self.update_max_degree()
@@ -168,73 +168,52 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         return self.states[next_state_index]
 
     def find_best_action(self, train_episode=None):
-        if self.current_state_index is None or self.transitions[self.current_state_index] == []:
-            return None
-        return 0
-
-    def select_option(self):
-        while True:
-            option_chosen = input("which option should I choose ? (-1 = explore)")
-
-            try:
-                option_chosen = int(option_chosen)
-                number_possible_options = len(self.transitions[self.current_state_index])
-                if option_chosen >= number_possible_options:
-                    print("wrong option chosen.")
-                    print("enter an integer less than " + str(number_possible_options))
-                else:
-                    return option_chosen
-            except ValueError:
-                print("type an integer")
-
-    def manual_find_best_action(self, train_episode=None):
-        if self.current_state_index is None or self.transitions[self.current_state_index] == []:
-            return None
-
-        if self.current_path and self.current_state_index == self.current_path[0]:
-            self.current_path.pop(0)
-            print("following the path " + str(self.current_path))
-            (next_index_path, _) = self.transitions[self.current_state_index].index(self.current_path[0])
-            return next_index_path
-
-        else:
-            print(self)
-            option_chosen = self.select_option()
-
-            if option_chosen == -1:
-                return None
-
-            else:
-                return option_chosen
-
-    def ongoing_implementation_find_best_action(self, train_episode=None):
-        if self.current_state_index is None:
+        if self.current_state_index is None or not self.transitions[self.current_state_index]:
             return None  # explore
 
-        if not self.current_path:  # if the current path is empty
+        if not self.current_path:  # if the current path is empty, make a new path.
+
             # compute the global best path from the current state index
-            successors = self.find_best_path(self.current_state_index)
+            max_valued_vertex, predecessors = self.find_best_path(self.current_state_index)
+            state_to_explore = self.get_state_to_explore(predecessors, self.current_state_index)
 
-            # make a new path to follow
-            if train_episode is not None and np.random.rand() < 0.1:  # todo: put this in the parameters
-                unexplored_state = np.argmin(self.number_explorations)
-                if self.number_explorations[unexplored_state] < self.max_explore:  # exploration is needed
-                    self.current_path = self.make_sub_path(successors, self.current_state_index, unexplored_state)
-
-            else:
-                self.current_path = self.make_sub_path(successors, self.current_state_index, successors.index(None))
-
-            return self.current_path.pop()
-
-        else:  # follow the path
-            if self.current_state_index != self.current_path[0]:  # if the current state is out of the path
-                self.current_path = []
-                return self.find_best_action(train_episode)  # make a new path
+            if state_to_explore is not None and train_episode is not None and np.random.rand() < 0.1:  # todo: put this in the parameters
+                # make a new path for exploring
+                self.current_path = self.make_sub_path(predecessors, self.current_state_index, state_to_explore)+[None]
+                # print(self)
+                # print("target state to explore " + str(state_to_explore))
+                # print("new_path " + str(self.current_path))
 
             else:
-                self.current_path.pop(0)  # remove the first element
+                # make a new path for exploiting
+                self.current_path = self.make_sub_path(predecessors, self.current_state_index, max_valued_vertex)+[None]
+                # print(self)
+                # print("target = " + str(max_valued_vertex))
+                # print("new_path " + str(self.current_path))
+
+            self.current_path.pop(0)
+            next_state = self.current_path[0]
+            # return index of the next option
+            if next_state is None:
+                return None
+            else:
+                return [t[0] for t in self.transitions[self.current_state_index]].index(next_state)
+
+        else:  # follow the existing path
+            a = self.current_path.pop(0)
+            if self.current_state_index == a:  # follow the path
                 next_state = self.current_path[0]  # return the next state of the path
-                return self.transitions[self.current_state_index].index(next_state)  # index of the next option
+                # print(self)
+                # print("next target " + str(next_state))
+                # print("current path " + str(self.current_path))
+                if next_state is None:
+                    return None
+                else:
+                    return [t[0] for t in self.transitions[self.current_state_index]].index(next_state)
+
+            else:  # we are out of the path, make a new one and start again
+                self.current_path = []
+                return self.find_best_action(train_episode)
 
     def find_best_path(self, root):
         """
@@ -245,22 +224,102 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         number_vertices = len(self.states)
         distances = [-float("inf")] * number_vertices
         distances[root] = 0
-        successors = [None] * number_vertices
+        predecessors = [None] * number_vertices
 
         for _ in range(number_vertices - 1):
             for origin in range(number_vertices):
                 for (target, value) in self.transitions[origin]:
                     if distances[target] < distances[origin] + value:
                         distances[target] = distances[origin] + value
-                        successors[origin] = target
+                        predecessors[target] = origin
 
-        return successors
+        # compute the vertices with the highest value, excluding the root
+        distances[root] = -float("inf")
+        most_valued_vertices = np.nonzero(distances == np.max(distances))[0]
+        # choose at *random* among the most valuable vertices
+        most_valued_vertex = np.random.choice(most_valued_vertices)
+        return most_valued_vertex, predecessors
 
-    def make_sub_path(self, successors, origin, target):
+    def make_sub_path(self, predecessors, origin, target):
         if origin == target:
-            return [origin]
+            return [target]
         else:
-            return [origin] + self.make_sub_path(successors, successors[origin], target)
+            return self.make_sub_path(predecessors, origin, predecessors[target]) + [target]
+
+    def _get_path(self, predecessors, current_state, already_visited=None):
+        if already_visited is None:
+            already_visited = []
+
+        successors = np.nonzero(np.array(predecessors) == current_state)[0]
+        path_from_current_state = [current_state]
+
+        if len(successors) > 0:
+            for s in successors:
+                if s not in already_visited:
+                    already_visited.append(s)
+                    path_from_current_state += self._get_path(predecessors, s, already_visited)
+
+        return path_from_current_state
+
+    def _get_unexplored_states(self, path):
+        unexplored_states = []
+        for state in path:
+            if self.number_explorations[state] < self.max_explore:
+                unexplored_states.append(state)
+
+        return unexplored_states
+
+    def get_state_to_explore(self, predecessors, current_state):
+        """
+        return None if no state to explore available
+        return the state index to explore which is a state accessible from current_state and is the least explored
+        :param predecessors:
+        :param current_state:
+        :return:
+        """
+        path = self._get_path(predecessors, current_state)
+        unexplored_states = self._get_unexplored_states(path)
+        if unexplored_states:
+            number_explorations = [self.number_explorations[explorable_state] for explorable_state in unexplored_states]
+            return unexplored_states[int(np.argmin(number_explorations))]
+
+        else:
+            return None
+
+    # def manual_select_option(self):
+    #     while True:
+    #         option_chosen = input("which option should I choose ? (-1 = explore)")
+    #
+    #         try:
+    #             option_chosen = int(option_chosen)
+    #             number_possible_options = len(self.transitions[self.current_state_index])
+    #             if option_chosen >= number_possible_options:
+    #                 print("wrong option chosen.")
+    #                 print("enter an integer less than " + str(number_possible_options))
+    #             else:
+    #                 return option_chosen
+    #         except ValueError:
+    #             print("type an integer")
+    #
+    # def manual_find_best_action(self, train_episode=None):
+    #     if self.current_state_index is None or self.transitions[self.current_state_index] == []:
+    #         return None
+    #
+    #     if self.current_path and self.current_state_index == self.current_path[0]:
+    #         self.current_path.pop(0)
+    #         print("following the path " + str(self.current_path))
+    #         (next_index_path, _) = self.transitions[self.current_state_index].index(self.current_path[0])
+    #         return next_index_path
+    #
+    #     else:
+    #         print(self)
+    #         option_chosen = self.select_option()
+    #
+    #         if option_chosen == -1:
+    #             return None
+    #
+    #         else:
+    #             return option_chosen
 
 
 class TreeQPolicyManager(AbstractPolicyManager):

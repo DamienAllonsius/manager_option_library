@@ -169,7 +169,7 @@ class AbstractManager(metaclass=ABCMeta):
 
         # prepare to display the states
         if self.parameters["display_environment"]:
-            self.show_render = AbstractManager.get_show_render_train()
+            self.show_render = self.get_show_render_train()
 
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate(environment, t)
@@ -194,7 +194,7 @@ class AbstractManager(metaclass=ABCMeta):
 
         # prepare to display the states if needed
         if self.parameters["display_environment"]:
-            self.show_render = AbstractManager.get_show_render_simulate()
+            self.show_render = self.get_show_render_simulate()
 
         # simulate
         self._train_simulate(environment)
