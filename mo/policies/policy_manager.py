@@ -116,12 +116,16 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
             self.current_state_index = 0
 
         else:
-            self._update_graph(new_state, 0)
+            new_state_index = find_element_in_list(new_state, self.states)  # bottleneck. Maybe hash states.
 
-    def update_policy(self, state, option_score):
-        self._update_graph(state, option_score)
+            if new_state_index is None:
+                self.states.append(new_state)
+                self.number_explorations.append(0)
+                new_state_index = len(self.states) - 1
 
-    def _update_graph(self, new_state, value):
+            self.current_state_index = new_state_index
+
+    def update_policy(self, new_state, value):
         edge_value = value + self.parameters["edge_cost"]
         new_state_index = find_element_in_list(new_state, self.states)  # bottleneck. Maybe hash states.
 
@@ -197,6 +201,8 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
 
                 assert self.current_state_index != most_valued_vertex, \
                     "there is a transition from current_state_index but the max distance is - inf !"
+                if verbose:
+                    print("most_valued_vertex: " + str(most_valued_vertex))
                 self.current_path = self.make_sub_path(predecessors, self.current_state_index, most_valued_vertex)
                 if verbose:
                     print(self)
@@ -258,13 +264,15 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         return predecessors, distances
 
     def make_sub_path(self, predecessors, origin, target):
+        print("origin = " + str(origin) + " target = " + str(target))
+
         if origin == target:
             return [target]
         else:
             return self.make_sub_path(predecessors, origin, predecessors[target]) + [target]
 
     @staticmethod
-    def _get_connex_component(distances):
+    def _get_connected_component(distances):
         return np.nonzero(np.array(distances) != -float("inf"))[0]
 
     def _get_unexplored_states(self, path):
@@ -276,7 +284,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         return the state index to explore which is a state accessible from current_state and is the least explored
         :return:
         """
-        path = self._get_connex_component(distances)
+        path = self._get_connected_component(distances)
         unexplored_states = self._get_unexplored_states(path)
         if unexplored_states:
             number_explorations = [self.number_explorations[explorable_state] for explorable_state in unexplored_states]
