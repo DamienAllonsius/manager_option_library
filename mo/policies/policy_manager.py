@@ -89,8 +89,6 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         self.max_degree = 0  # maximum number of degrees (degree = number of edges that leave the node).
         self.current_state_index = None  # index of the current state
         self.number_explorations = []  # number of explorations done for each state
-        self.max_explore = 10  # each state will be explored at most max_explore times todo : put it in parameters
-        self.edge_cost = -0.01  # todo: put it in parameters
 
         # the path that the agent is currently following
         self.current_path = []
@@ -99,7 +97,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         """
         :return: a string containing a representation of the graph
         """
-        s = str()
+        s = "\n"
         for idx in range(len(self.states)):
             if idx == self.current_state_index:
                 s += red + str(idx) + white
@@ -108,7 +106,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
                 s += str(idx)
 
             s += ": " + str(self.transitions[idx]) + "\n"
-        return s
+        return s[:-1]
 
     def reset(self, new_state):
         if not self.states:  # first state added
@@ -124,7 +122,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         self._update_graph(state, option_score)
 
     def _update_graph(self, new_state, value):
-        edge_value = value + self.edge_cost
+        edge_value = value + self.parameters["edge_cost"]
         new_state_index = find_element_in_list(new_state, self.states)  # bottleneck. Maybe hash states.
 
         if new_state_index is None:
@@ -167,48 +165,72 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         (next_state_index, _) = self.transitions[self.current_state_index][option_index]
         return self.states[next_state_index]
 
-    def find_best_action(self, train_episode=None):
+    def find_best_action(self, train_episode=None, verbose=False):
+        verbose = True
         if self.current_state_index is None or not self.transitions[self.current_state_index]:
             return None  # explore
 
-        if not self.current_path:  # if the current path is empty, make a new path.
+        if len(self.current_path) <= 1:  # The current path is empty, make a new path.
 
             # compute the global best path from the current state index
-            max_valued_vertex, predecessors = self.find_best_path(self.current_state_index)
-            state_to_explore = self.get_state_to_explore(predecessors, self.current_state_index)
+            predecessors, distances = self.find_best_path(self.current_state_index)
 
-            if state_to_explore is not None and train_episode is not None and np.random.rand() < 0.1:  # todo: put this in the parameters
+            if train_episode is not None and np.random.rand() < self.parameters["probability_random_action_manager"]:
                 # make a new path for exploring
-                self.current_path = self.make_sub_path(predecessors, self.current_state_index, state_to_explore)+[None]
-                # print(self)
-                # print("target state to explore " + str(state_to_explore))
-                # print("new_path " + str(self.current_path))
+                state_to_explore = self.get_state_to_explore(distances)
+                if state_to_explore is not None:
+                    self.current_path = self.make_sub_path(predecessors, self.current_state_index, state_to_explore)
+                    # then explore this state
+                    self.current_path += [None]
+                    if verbose:
+                        print(self)
+                        print("target state to explore " + str(state_to_explore))
+                        print("new_path " + str(self.current_path))
 
             else:
                 # make a new path for exploiting
-                self.current_path = self.make_sub_path(predecessors, self.current_state_index, max_valued_vertex)+[None]
-                # print(self)
-                # print("target = " + str(max_valued_vertex))
-                # print("new_path " + str(self.current_path))
+                # compute the vertices with the highest value, excluding the root
+                distances[self.current_state_index] = -float("inf")
+                most_valued_vertices = np.nonzero(np.array(distances) == np.max(distances))[0]
+                # choose at *random* among the most valuable vertices
+                most_valued_vertex = np.random.choice(most_valued_vertices)
 
+                assert self.current_state_index != most_valued_vertex, \
+                    "there is a transition from current_state_index but the max distance is - inf !"
+                self.current_path = self.make_sub_path(predecessors, self.current_state_index, most_valued_vertex)
+                if verbose:
+                    print(self)
+                    print("target = " + str(most_valued_vertex))
+                    print("new_path " + str(self.current_path))
+
+            # self.current_path has length > 1
             self.current_path.pop(0)
             next_state = self.current_path[0]
             # return index of the next option
             if next_state is None:
                 return None
             else:
+                if verbose:
+                    print("option number : " +
+                          str([t[0] for t in self.transitions[self.current_state_index]].index(next_state)))
                 return [t[0] for t in self.transitions[self.current_state_index]].index(next_state)
 
         else:  # follow the existing path
+            if verbose:
+                print(self)
+                print("existing path " + str(self.current_path))
+                print("next target " + str(self.current_path[1]))
+
             a = self.current_path.pop(0)
-            if self.current_state_index == a:  # follow the path
-                next_state = self.current_path[0]  # return the next state of the path
-                # print(self)
-                # print("next target " + str(next_state))
-                # print("current path " + str(self.current_path))
+            if self.current_state_index == a:  # we are in the right state, follow the rest of the path
+                next_state = self.current_path[0]  # next state of the path
                 if next_state is None:
                     return None
-                else:
+                else:  # return the option to go toward the next state
+                    if verbose:
+                        print("option number : " +
+                              str([t[0] for t in self.transitions[self.current_state_index]].index(next_state)))
+
                     return [t[0] for t in self.transitions[self.current_state_index]].index(next_state)
 
             else:  # we are out of the path, make a new one and start again
@@ -233,12 +255,7 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
                         distances[target] = distances[origin] + value
                         predecessors[target] = origin
 
-        # compute the vertices with the highest value, excluding the root
-        distances[root] = -float("inf")
-        most_valued_vertices = np.nonzero(distances == np.max(distances))[0]
-        # choose at *random* among the most valuable vertices
-        most_valued_vertex = np.random.choice(most_valued_vertices)
-        return most_valued_vertex, predecessors
+        return predecessors, distances
 
     def make_sub_path(self, predecessors, origin, target):
         if origin == target:
@@ -246,38 +263,20 @@ class GraphPlanningPolicyManager(AbstractPolicyManager):
         else:
             return self.make_sub_path(predecessors, origin, predecessors[target]) + [target]
 
-    def _get_path(self, predecessors, current_state, already_visited=None):
-        if already_visited is None:
-            already_visited = []
-
-        successors = np.nonzero(np.array(predecessors) == current_state)[0]
-        path_from_current_state = [current_state]
-
-        if len(successors) > 0:
-            for s in successors:
-                if s not in already_visited:
-                    already_visited.append(s)
-                    path_from_current_state += self._get_path(predecessors, s, already_visited)
-
-        return path_from_current_state
+    @staticmethod
+    def _get_connex_component(distances):
+        return np.nonzero(np.array(distances) != -float("inf"))[0]
 
     def _get_unexplored_states(self, path):
-        unexplored_states = []
-        for state in path:
-            if self.number_explorations[state] < self.max_explore:
-                unexplored_states.append(state)
+        return [state for state in path if self.number_explorations[state] < self.parameters["max_explore"]]
 
-        return unexplored_states
-
-    def get_state_to_explore(self, predecessors, current_state):
+    def get_state_to_explore(self, distances):
         """
         return None if no state to explore available
         return the state index to explore which is a state accessible from current_state and is the least explored
-        :param predecessors:
-        :param current_state:
         :return:
         """
-        path = self._get_path(predecessors, current_state)
+        path = self._get_connex_component(distances)
         unexplored_states = self._get_unexplored_states(path)
         if unexplored_states:
             number_explorations = [self.number_explorations[explorable_state] for explorable_state in unexplored_states]

@@ -118,6 +118,7 @@ class AbstractManager(metaclass=ABCMeta):
         best_option_index = self.policy.find_best_action(train_episode)
         if best_option_index is None:
             # in this case : explore
+            self.explore_option.reset()
             return self.explore_option
 
         else:
@@ -153,6 +154,7 @@ class AbstractManager(metaclass=ABCMeta):
                 self.option_list.append(new_option)
 
     def _update_policy(self, o_r_d_i, option):
+        print("option " + str(option.index) + " score = " + str(option.score))
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
 
     def train(self, environment, seed=0):
@@ -174,7 +176,7 @@ class AbstractManager(metaclass=ABCMeta):
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate(environment, t)
 
-            if not t % 200:
+            if not t % 100:
                 self.plot_success_rate_transitions()
 
         self.show_render.close()
