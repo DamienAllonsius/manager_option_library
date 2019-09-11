@@ -176,7 +176,11 @@ class AbstractManager(metaclass=ABCMeta):
         for t in tqdm(range(1, self.parameters["number_episodes"] + 1)):
             self._train_simulate(environment, t)
 
-            if not t % 100:
+            if not t % self.parameters["episodes_performances"]:
+                assert len(self.option_list) > 0, \
+                    "no option found, probably because the agent does not see any new state. " \
+                    "You should tune the parameter THRESH_BINARY_MANAGER or " \
+                    "increase the number of zones for the manager."
                 self.plot_success_rate_transitions()
 
         self.show_render.close()
@@ -237,8 +241,8 @@ class AbstractManager(metaclass=ABCMeta):
         x = [float(line.split()[0]) for line in lines]
         plt.plot(x)
         plt.title("success rate of options' transitions")
-        plt.draw()
-        plt.pause(0.01)
+        # plt.draw()
+        # plt.pause(0.01)
         plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition" + "success_rate_transition")
         plt.savefig("success_rate_transition")
 
