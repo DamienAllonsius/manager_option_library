@@ -107,6 +107,8 @@ class AbstractManager(metaclass=ABCMeta):
 
             done = self.check_end_manager(o_r_d_i)
 
+        self.write_manager_score()
+
     def select_option(self, o_r_d_i, train_episode=None):
         """
         The manager will
@@ -143,6 +145,7 @@ class AbstractManager(metaclass=ABCMeta):
             self.score += option.score
 
         else:  # in training mode
+            self.score += option.score
             self._update_policy(o_r_d_i, option)
 
             # add a new option if necessary
@@ -181,7 +184,9 @@ class AbstractManager(metaclass=ABCMeta):
                     "no option found, probably because the agent does not see any new state. " \
                     "You should tune the parameter THRESH_BINARY_MANAGER or " \
                     "increase the number of zones for the manager."
+
                 self.plot_success_rate_transitions()
+                self.plot_manager_score()
 
         self.show_render.close()
 
@@ -223,6 +228,12 @@ class AbstractManager(metaclass=ABCMeta):
         self.save_results.write_message_in_a_file("success_rate_transition",
                                                   str(sum(self.successful_transition)) + "\n")
 
+    def write_manager_score(self):
+        """
+        Write in a file the manager's score.
+        """
+        self.save_results.write_message_in_a_file("manager_score", str(self.score) + "\n")
+
     def print_success_rate_transitions(self, correct_termination):
         """
         Print the sum of the last 100 transitions.
@@ -241,10 +252,28 @@ class AbstractManager(metaclass=ABCMeta):
         x = [float(line.split()[0]) for line in lines]
         plt.plot(x)
         plt.title("success rate of options' transitions")
+        plt.xlabel("number of options executed")
+        plt.ylabel("% of successful option executions")
         # plt.draw()
         # plt.pause(0.01)
-        plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition" + "success_rate_transition")
-        plt.savefig("success_rate_transition")
+        plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition")
+        plt.savefig("metrics/success_rate_transition")
+        plt.close()
+
+    def plot_manager_score(self):
+        f = open(str(self.save_results.dir_path) + "/manager_score")
+        lines = f.readlines()
+        f.close()
+        x = [float(line.split()[0]) for line in lines]
+        plt.plot(x)
+        plt.title("manager's score")
+        plt.xlabel("epochs")
+        plt.ylabel("total reward in epochs")
+        # plt.draw()
+        # plt.pause(0.01)
+        plt.savefig(str(self.save_results.dir_path) + "/manager_score")
+        plt.savefig("metrics/manager_score")
+        plt.close()
 
     def check_end_option(self, option, obs_manager):
         """
