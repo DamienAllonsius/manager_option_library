@@ -188,7 +188,8 @@ class AbstractManager(metaclass=ABCMeta):
                 self.plot_success_rate_transitions()
                 self.plot_manager_score()
 
-        self.show_render.close()
+        if self.parameters["display_environment"]:
+            self.show_render.close()
 
     def simulate(self, environment, seed=0):
         """
@@ -214,7 +215,8 @@ class AbstractManager(metaclass=ABCMeta):
         self.save_results.write_reward(self.parameters["number_episodes"], self.score)
         self.save_results.write_message("Experiment complete.")
 
-        self.show_render.close()
+        if self.parameters["display_environment"]:
+            self.show_render.close()
 
     def write_success_rate_transitions(self, correct_termination):
         """
