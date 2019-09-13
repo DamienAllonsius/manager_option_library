@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from mo.policies.policy_option import PolicyOptionQArray
 
 
 class AbstractOption(metaclass=ABCMeta):
@@ -59,41 +58,3 @@ class AbstractOption(metaclass=ABCMeta):
         :return:
         """
         raise NotImplementedError()
-
-
-class OptionQLearning(AbstractOption):
-    """
-    Example of option using a policy.
-    Policy is updated with Q learning algorithm.
-    The policy is stored and computed through variable *policy* which inherits from PolicyAbstract class
-    """
-
-    def __init(self, action_space, parameters, index):
-        super().__init__(action_space, parameters, index)
-        self.policy = PolicyOptionQArray(action_space, parameters)
-
-    def act(self, train_episode=None):
-        """
-        An epsilon-greedy policy based on the values of self.policy (Q function)
-        :param train_episode: if not None -> training phase. If None -> test phase
-        :return: an action at the lower level
-        """
-        return self.policy.find_best_action(train_episode)
-
-    def reset(self, state):
-        """
-        Reset the current state
-        :return: void
-        """
-        self.policy.reset(state)
-
-    def update_option(self, o_r_d_i, action, correct_termination, train_episode=None):
-        # compute the rewards
-        total_reward = o_r_d_i[1] + self.compute_goal_reward(correct_termination)
-
-        # update the parameters
-        end_option = correct_termination is not None
-        self.policy.update_policy(o_r_d_i[0]["option"], total_reward, action, end_option, train_episode)
-
-        # compute the total score
-        self.score += o_r_d_i[1]
