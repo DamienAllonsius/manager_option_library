@@ -80,6 +80,7 @@ class AbstractManager(metaclass=ABCMeta):
             # If no option is activated then choose one
             if current_option is None:
                 current_option = self.select_option(o_r_d_i, train_episode)
+                assert current_option.score == 0, "the option's reset function must reset the score to 0."
 
             # choose an action
             action = current_option.act(train_episode)
