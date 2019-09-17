@@ -1,5 +1,4 @@
 import cv2
-from gym.envs.classic_control import rendering
 import pyglet
 import numpy as np
 
@@ -7,6 +6,8 @@ import numpy as np
 class ShowRender(object):
 
     def __init__(self):
+        from gym.envs.classic_control import rendering  # causes problem with the cluster
+
         self.display_learning = True
 
         self.vanilla_view = True
