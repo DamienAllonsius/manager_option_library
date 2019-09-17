@@ -16,7 +16,6 @@ from mo.utils.save_results import SaveResults
 from mo.utils.show_render import ShowRender
 from mo.utils.miscellaneous import obs_equal, constrained_type, check_type
 from collections import deque
-import matplotlib.pyplot as plt
 
 
 class AbstractManager(metaclass=ABCMeta):
@@ -41,12 +40,19 @@ class AbstractManager(metaclass=ABCMeta):
         self.explore_option = self.new_explore_option()
         self.show_render = None
 
-        self.save_results = SaveResults(self.parameters)
+        self.save_results = SaveResults()
         self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
 
         # checks that policy and options have the right type.
         constrained_type(self.policy, AbstractPolicyManager)
         constrained_type(self.explore_option, AbstractOptionExplore)
+
+    def reset_all(self):
+        self.option_list = []
+        self.score = 0
+        self.policy = self.new_policy()
+        self.explore_option = self.new_explore_option()
+        self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
 
     def reset(self, initial_state):
         self.score = 0
@@ -100,7 +106,8 @@ class AbstractManager(metaclass=ABCMeta):
             if correct_termination is not None:
                 if check_type(current_option, AbstractOption):
                     # record the correct transition when the option is a regular option (i.e. not an explore option)
-                    self.write_success_rate_transitions(correct_termination)
+                    self.successful_transition.append(correct_termination)
+                    self.write_success_rate_transitions()
 
                 # the manager does not need to know if the correct_termination is 0 or 1.
                 self.update_manager(o_r_d_i, current_option, train_episode)
@@ -161,7 +168,7 @@ class AbstractManager(metaclass=ABCMeta):
         print("option " + str(option.index) + " score = " + str(option.score))
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
 
-    def train(self, environment, seed=0):
+    def train(self, environment, parameters, seed=0):
         """
         Method used to train the RL manager. It calls function _train_simulate_manager with the current training episode
         :return: Nothing
@@ -171,7 +178,8 @@ class AbstractManager(metaclass=ABCMeta):
         environment.seed(seed)
 
         # prepare the file for the results
-        self.save_results.write_setting()
+        self.save_results.set_seed(seed)
+        self.save_results.write_setting(parameters)
 
         # prepare to display the states
         if self.parameters["display_environment"]:
@@ -186,8 +194,8 @@ class AbstractManager(metaclass=ABCMeta):
                     "You should tune the parameter THRESH_BINARY_MANAGER or " \
                     "increase the number of zones for the manager."
 
-                self.plot_success_rate_transitions()
-                self.plot_manager_score()
+                self.save_results.plot_success_rate_transitions()
+                self.save_results.plot_manager_score()
 
         if self.parameters["display_environment"]:
             self.show_render.close()
@@ -202,9 +210,6 @@ class AbstractManager(metaclass=ABCMeta):
         np.random.seed(seed)
         environment.seed(seed)
 
-        # prepare the file for the results
-        self.save_results.set_file_results_name(seed)
-
         # prepare to display the states if needed
         if self.parameters["display_environment"]:
             self.show_render = self.get_show_render_simulate()
@@ -212,71 +217,24 @@ class AbstractManager(metaclass=ABCMeta):
         # simulate
         self._train_simulate(environment)
 
-        # write the results
-        self.save_results.write_reward(self.parameters["number_episodes"], self.score)
-        self.save_results.write_message("Experiment complete.")
-
         if self.parameters["display_environment"]:
             self.show_render.close()
 
-    def write_success_rate_transitions(self, correct_termination):
+    def write_success_rate_transitions(self):
         """
         Write in a file the sum of the last 100 transitions.
         A transition is 0 or 1.
         1 if the option terminates at the right abstract state and 0 otherwise.
-        :param correct_termination: 1 if the transition is correct. 0 otherwise.
         :return: void
         """
-        self.successful_transition.append(correct_termination)
-        self.save_results.write_message_in_a_file("success_rate_transition",
+        self.save_results.write_message_in_a_file(self.save_results.success_rate_file_name,
                                                   str(sum(self.successful_transition)) + "\n")
 
     def write_manager_score(self):
         """
         Write in a file the manager's score.
         """
-        self.save_results.write_message_in_a_file("manager_score", str(self.score) + "\n")
-
-    def print_success_rate_transitions(self, correct_termination):
-        """
-        Print the sum of the last 100 transitions.
-        A transition is 0 or 1.
-        1 if the option terminates at the right abstract state and 0 otherwise.
-        :param correct_termination: 1 if the transition is correct. 0 otherwise.
-        :return: void
-        """
-        self.successful_transition.append(correct_termination)
-        print(str(sum(self.successful_transition)) + "%")
-
-    def plot_success_rate_transitions(self):
-        f = open(str(self.save_results.dir_path) + "/success_rate_transition")
-        lines = f.readlines()
-        f.close()
-        x = [float(line.split()[0]) for line in lines]
-        plt.plot(x)
-        plt.title("success rate of options' transitions")
-        plt.xlabel("number of options executed")
-        plt.ylabel("% of successful option executions")
-        # plt.draw()
-        # plt.pause(0.01)
-        plt.savefig(str(self.save_results.dir_path) + "/success_rate_transition")
-        plt.savefig("metrics/success_rate_transition")
-        plt.close()
-
-    def plot_manager_score(self):
-        f = open(str(self.save_results.dir_path) + "/manager_score")
-        lines = f.readlines()
-        f.close()
-        x = [float(line.split()[0]) for line in lines]
-        plt.plot(x)
-        plt.title("manager's score")
-        plt.xlabel("epochs")
-        plt.ylabel("total reward in epochs")
-        # plt.draw()
-        # plt.pause(0.01)
-        plt.savefig(str(self.save_results.dir_path) + "/manager_score")
-        plt.savefig("metrics/manager_score")
-        plt.close()
+        self.save_results.write_message_in_a_file(self.save_results.manager_score_file_name, str(self.score) + "\n")
 
     def check_end_option(self, option, obs_manager):
         """
@@ -342,6 +300,13 @@ class AbstractManager(metaclass=ABCMeta):
 
     def get_terminal_state(self, option_index):
         return self.policy.get_next_state(option_index)
+
+    def get_result_paths(self):
+        return {"manager": self.save_results.dir_path_seed + "/" + self.save_results.manager_score_file_name,
+                "transitions": self.save_results.dir_path_seed + "/" + self.save_results.success_rate_file_name}
+
+    def get_result_folder(self):
+        return self.save_results.dir_path
 
     # Method to be implemented by the sub classes
 

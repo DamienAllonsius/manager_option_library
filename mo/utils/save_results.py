@@ -1,54 +1,66 @@
 import os
 import time
+import matplotlib.pyplot as plt
 
 
 class SaveResults(object):
 
-    def __init__(self, parameters):
-        self.parameters = parameters
-        self.dir_path = self.get_dir_path()
-        self.file_results_name = None
+    def __init__(self):
+        self.dir_path = self.make_dir_path()
+        self.dir_path_seed = None
+
+        self.manager_score_file_name = "manager_score"
+        self.success_rate_file_name = "success_rate_transition"
+
+    def set_seed(self, seed):
+        self.dir_path_seed = self.dir_path + "/seed_" + str(seed)
+        os.mkdir(self.dir_path_seed)
 
     @staticmethod
-    def get_dir_path():
+    def make_dir_path():
         dir_name = "results/"
         if not os.path.exists(dir_name):
             os.mkdir(dir_name)
 
         dir_name += time.asctime(time.localtime(time.time())).replace(" ", "_")
-        os.mkdir(dir_name)
-        print("results are stored in directory: " + str(dir_name))
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
 
         return dir_name
 
-    def write_message(self, message):
-        """
-        :param message:
-        :return:
-        """
-        f = open(self.file_results_name, "a")
-        f.write(message)
-        f.close()
-
     def write_message_in_a_file(self, file_name, message):
-        f = open(self.dir_path + "/" + file_name, "a")
+        f = open(self.dir_path_seed + "/" + file_name, "a")
         f.write(message)
         f.close()
 
-    def write_reward(self, t, total_reward):
-        f = open(self.file_results_name, "a")
-        f.write("t = " + str(t) + " reward = " + str(total_reward) + "\n")
-        f.close()
-
-    def write_setting(self):
+    def write_setting(self, parameters):
         """
         writes the parameters in a file
         """
-        f = open(self.dir_path + "/" + "setting", "a")
-        for key in self.parameters:
-            f.write(key + " : " + str(self.parameters[key]) + "\n")
-        f.write("\n" * 3)
+        f = open(self.dir_path + "/" + "setting", "w")
+        for key in parameters:
+            f.write(key + " : " + str(parameters[key]) + "\n")
+
         f.close()
 
-    def set_file_results_name(self, seed):
-        self.file_results_name = self.dir_path + "/" + "seed_" + str(seed)
+    def plot_results(self, file_name, title, xlabel, ylabel):
+        f = open(str(self.dir_path_seed) + "/" + file_name)
+        lines = f.readlines()
+        f.close()
+        y = [float(line.split()[0]) for line in lines]
+        plt.plot(y)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        # plt.draw()
+        # plt.pause(0.01)
+        plt.savefig(str(self.dir_path_seed) + "/" + file_name)
+        plt.savefig("metrics/" + file_name)
+        plt.close()
+
+    def plot_success_rate_transitions(self):
+        self.plot_results(self.success_rate_file_name, "success rate of options' transitions",
+                          "number of options executed", "% of successful option executions")
+
+    def plot_manager_score(self):
+        self.plot_results(self.manager_score_file_name, "manager's score", "epochs", "total reward in epochs")
