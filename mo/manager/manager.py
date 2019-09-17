@@ -16,6 +16,7 @@ from mo.utils.save_results import SaveResults
 from mo.utils.show_render import ShowRender
 from mo.utils.miscellaneous import obs_equal, constrained_type, check_type
 from collections import deque
+import tensorflow as tf
 
 
 class AbstractManager(metaclass=ABCMeta):
@@ -48,11 +49,18 @@ class AbstractManager(metaclass=ABCMeta):
         constrained_type(self.explore_option, AbstractOptionExplore)
 
     def reset_all(self):
+        # deleting all the keras subclassing models
+        for options in self.option_list:
+            del options
+
+        self.parameters["SHARED_CONVOLUTION_LAYERS"].reset()
+
         self.option_list = []
         self.score = 0
         self.policy = self.new_policy()
         self.explore_option = self.new_explore_option()
         self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
+
 
     def reset(self, initial_state):
         self.score = 0
@@ -165,7 +173,7 @@ class AbstractManager(metaclass=ABCMeta):
                 self.option_list.append(new_option)
 
     def _update_policy(self, o_r_d_i, option):
-        print("option " + str(option.index) + " score = " + str(option.score))
+        #print("option " + str(option.index) + " score = " + str(option.score))
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
 
     def train(self, environment, parameters, seed=0):
@@ -256,15 +264,15 @@ class AbstractManager(metaclass=ABCMeta):
         else:
             # option is done
             if check_type(option, AbstractOptionExplore):
-                print("explore")
+                #print("explore")
                 return True
 
             elif check_type(option, AbstractOption):
                 correct_transition = obs_equal(obs_manager, self.get_terminal_state(option.index))
-                if correct_transition:
-                    print("correct final state")
-                else:
-                    print("wrong final state")
+                #if correct_transition:
+                #    print("correct final state")
+                #else:
+                #    print("wrong final state")
                 return correct_transition
 
             else:
