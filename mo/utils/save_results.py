@@ -63,4 +63,5 @@ class SaveResults(object):
                           "number of options executed", "% of successful option executions")
 
     def plot_manager_score(self):
-        self.plot_results(self.manager_score_file_name, "manager's score", "epochs", "total reward in epochs")
+        self.plot_results(self.manager_score_file_name, "manager's average score",
+                          "epochs", "average total reward in epochs")

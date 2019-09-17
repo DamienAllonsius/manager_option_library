@@ -16,7 +16,6 @@ from mo.utils.save_results import SaveResults
 from mo.utils.show_render import ShowRender
 from mo.utils.miscellaneous import obs_equal, constrained_type, check_type
 from collections import deque
-import tensorflow as tf
 
 
 class AbstractManager(metaclass=ABCMeta):
@@ -34,15 +33,14 @@ class AbstractManager(metaclass=ABCMeta):
         self.action_space = action_space
         self.parameters = parameters
         self.option_list = []
-        # the score is only used in the simulation mode
-        self.score = 0
 
         self.policy = self.new_policy()
         self.explore_option = self.new_explore_option()
         self.show_render = None
 
         self.save_results = SaveResults()
-        self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
+        self.successful_transition = deque(np.zeros(100), maxlen=100)  # A list of 0 and 1 of size <=100.
+        self.score = deque(np.zeros(100), maxlen=100)  # A list of 0 and 1 of size <=100.
 
         # checks that policy and options have the right type.
         constrained_type(self.policy, AbstractPolicyManager)
@@ -56,14 +54,13 @@ class AbstractManager(metaclass=ABCMeta):
         self.parameters["SHARED_CONVOLUTION_LAYERS"].reset()
 
         self.option_list = []
-        self.score = 0
         self.policy = self.new_policy()
         self.explore_option = self.new_explore_option()
-        self.successful_transition = deque(maxlen=100)  # A list of 0 and 1 of size <=100.
-
+        self.successful_transition = deque(np.zeros(100), maxlen=100)
+        self.score = deque(np.zeros(100), maxlen=100)
 
     def reset(self, initial_state):
-        self.score = 0
+        self.score.append(0)
         self.policy.reset(initial_state)
 
     def _train_simulate(self, env, train_episode=None):
@@ -158,10 +155,10 @@ class AbstractManager(metaclass=ABCMeta):
         :return : void
         """
         if train_episode is None:  # in simulation mode
-            self.score += option.score
+            self.score[-1] += option.score
 
         else:  # in training mode
-            self.score += option.score
+            self.score[-1] += option.score
             self._update_policy(o_r_d_i, option)
 
             # add a new option if necessary
@@ -173,7 +170,7 @@ class AbstractManager(metaclass=ABCMeta):
                 self.option_list.append(new_option)
 
     def _update_policy(self, o_r_d_i, option):
-        #print("option " + str(option.index) + " score = " + str(option.score))
+        # print("option " + str(option.index) + " score = " + str(option.score))
         self.policy.update_policy(o_r_d_i[0]["manager"], option.score)
 
     def train(self, environment, parameters, seed=0):
@@ -236,13 +233,14 @@ class AbstractManager(metaclass=ABCMeta):
         :return: void
         """
         self.save_results.write_message_in_a_file(self.save_results.success_rate_file_name,
-                                                  str(sum(self.successful_transition)) + "\n")
+                                                  str(np.mean(self.successful_transition)*100) + "\n")
 
     def write_manager_score(self):
         """
         Write in a file the manager's score.
         """
-        self.save_results.write_message_in_a_file(self.save_results.manager_score_file_name, str(self.score) + "\n")
+        self.save_results.write_message_in_a_file(self.save_results.manager_score_file_name,
+                                                  str(np.mean(self.score)) + "\n")
 
     def check_end_option(self, option, obs_manager):
         """
