@@ -44,11 +44,13 @@ class SaveResults(object):
         f.close()
 
     def plot_results(self, file_name, title, xlabel, ylabel):
-        f = open(str(self.dir_path_seed) + "/" + file_name)
-        lines = f.readlines()
-        f.close()
-        y = [float(line.split()[0]) for line in lines]
-        plt.plot(y)
+        x, y = [], []
+        with open(str(self.dir_path_seed) + "/" + file_name) as f:
+            for line in f:
+                x.append(float(line.split()[0]))
+                y.append(float(line.split()[1]))
+
+        plt.plot(x, y)
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)

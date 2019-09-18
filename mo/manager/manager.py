@@ -2,8 +2,6 @@
 This library can be connected to a gym environment or any kind of environment as long as it has the following methods:
 - env.reset
 - env.step
-
-todo : intra_reward, find_best_action.
 """
 import numpy as np
 
@@ -39,8 +37,10 @@ class AbstractManager(metaclass=ABCMeta):
         self.show_render = None
 
         self.save_results = SaveResults()
-        self.successful_transition = deque(np.zeros(100), maxlen=100)  # A list of 0 and 1 of size <=100.
-        self.score = deque(np.zeros(100), maxlen=100)  # A list of 0 and 1 of size <=100.
+        self.deque_max_length = 100
+        self.number_transitions_made = 0
+        self.successful_transition = deque(maxlen=self.deque_max_length)  # A list of 0 and 1 of size <=100.
+        self.score = deque(maxlen=self.deque_max_length)
 
         # checks that policy and options have the right type.
         constrained_type(self.policy, AbstractPolicyManager)
@@ -56,8 +56,8 @@ class AbstractManager(metaclass=ABCMeta):
         self.option_list = []
         self.policy = self.new_policy()
         self.explore_option = self.new_explore_option()
-        self.successful_transition = deque(np.zeros(100), maxlen=100)
-        self.score = deque(np.zeros(100), maxlen=100)
+        self.successful_transition = deque(maxlen=self.deque_max_length)
+        self.score = deque(maxlen=self.deque_max_length)
 
     def reset(self, initial_state):
         self.score.append(0)
@@ -120,7 +120,7 @@ class AbstractManager(metaclass=ABCMeta):
 
             done = self.check_end_manager(o_r_d_i)
 
-        self.write_manager_score()
+        self.write_manager_score(train_episode)
 
     def select_option(self, o_r_d_i, train_episode=None):
         """
@@ -232,15 +232,19 @@ class AbstractManager(metaclass=ABCMeta):
         1 if the option terminates at the right abstract state and 0 otherwise.
         :return: void
         """
-        self.save_results.write_message_in_a_file(self.save_results.success_rate_file_name,
-                                                  str(np.mean(self.successful_transition)*100) + "\n")
+        self.number_transitions_made += 1
+        if len(self.successful_transition) >= self.deque_max_length:
+            self.save_results.write_message_in_a_file(self.save_results.success_rate_file_name,
+                                                      str(self.number_transitions_made) + " " +
+                                                      str(np.mean(self.successful_transition)*100) + "\n")
 
-    def write_manager_score(self):
+    def write_manager_score(self, train_episode):
         """
         Write in a file the manager's score.
         """
-        self.save_results.write_message_in_a_file(self.save_results.manager_score_file_name,
-                                                  str(np.mean(self.score)) + "\n")
+        if len(self.score) >= self.deque_max_length:
+            self.save_results.write_message_in_a_file(self.save_results.manager_score_file_name,
+                                                      str(train_episode) + " " + str(np.mean(self.score)) + "\n")
 
     def check_end_option(self, option, obs_manager):
         """
