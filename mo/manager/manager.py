@@ -262,14 +262,14 @@ class AbstractManager(metaclass=ABCMeta):
         else:
             # option is done
             if check_type(option, AbstractOptionExplore):
-                #print("explore")
+                # print("explore")
                 return True
 
             elif check_type(option, AbstractOption):
                 correct_transition = obs_equal(obs_manager, self.get_terminal_state(option.index))
-                #if correct_transition:
+                # if correct_transition:
                 #    print("correct final state")
-                #else:
+                # else:
                 #    print("wrong final state")
                 return correct_transition
 
@@ -340,30 +340,3 @@ class AbstractManager(metaclass=ABCMeta):
         :return: a class which inherits from AbstractPolicyManager
         """
         raise NotImplementedError()
-
-    # def get_intra_reward(self, end_option, next_state, current_option, train_episode):
-    #      """
-    #      returns a reward based on the maximum value of the next_state over all options
-    #      (maybe one should select some options instead of using all options).
-    #      :param end_option: if the option ended or not
-    #      :param next_state: the next lower level state
-    #      :param current_option: the current option.
-    #      :param train_episode:
-    #      :return: an integer corresponding to the value of the last action:
-    #      - if end_option is False : 0
-    #      - if end_option is True : maximum value over all options except the current option of this state
-    #      """
-    #      if not (end_option and train_episode and issubclass(type(current_option), AbstractOption)):
-    #          return 0
-    #
-    #      else:
-    #          intra_rewards = []
-    #          for option in self.option_list:
-    #
-    #              if option.index < len(self.policy.tree.current_node.children[current_option.index].children):
-    #                  intra_rewards.append(option.get_value(next_state))
-    #
-    #          if intra_rewards:
-    #              return max(intra_rewards)
-    #          else:
-    #              return 0

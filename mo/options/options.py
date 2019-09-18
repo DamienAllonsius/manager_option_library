@@ -48,7 +48,7 @@ class AbstractOption(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def update_option(self, o_r_d_i, action, correct_termination, train_episode=None):
+    def update_option(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abstractmethod

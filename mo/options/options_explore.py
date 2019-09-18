@@ -21,7 +21,7 @@ class AbstractOptionExplore(metaclass=ABCMeta):
         self.score = 0
 
     @abstractmethod
-    def update_option(self, *args):
+    def update_option(self, *args, **kwargs):
         raise NotImplementedError()
 
     @abstractmethod
@@ -37,7 +37,7 @@ class OptionRandomExplore(AbstractOptionExplore):
     def __str__(self):
         return "explore option"
 
-    def update_option(self, o_r_d_i, intra_reward, action, end_option, train_episode=None):
+    def update_option(self, o_r_d_i, action, correct_termination, intra_reward=0, train_episode=None):
         """
         just update the reward variable (reward found by random explore)
         :return:
