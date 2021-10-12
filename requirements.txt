@@ -3,5 +3,5 @@ numpy==1.15.4
 python_dateutil==2.8.0
 matplotlib
 gym
-opencv-python==4.1.0.25
+opencv-python==4.1.1.26
 tqdm
